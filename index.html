@@ -49,7 +49,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR BIMENSUAL DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 92 Estaciones y Calendario Interactivo</p>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo</p>
                 </div>
             </div>
 
@@ -86,7 +86,7 @@
                     <span class="text-lg font-black uppercase" x-text="selectedMonthName">OCT</span>
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan Operativo Individual</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan Operativo Bimensual</span>
                     <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
                     <p class="text-xs text-slate-500" x-text="'Mostrando agenda para: ' + selectedMonthLabel + ' (' + getTrainerVisits().length + ' visitas programadas)'"></p>
                 </div>
@@ -97,19 +97,19 @@
                 <button @click="selectMonth('prev')" 
                         :class="selectedMonth === 'prev' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                         class="px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <span>⬅ Mes Anterior</span>
+                    <span>⬅ Septiembre</span>
                 </button>
 
                 <button @click="selectMonth('current')" 
                         :class="selectedMonth === 'current' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                         class="px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <span>📌 Mes en Curso</span>
+                    <span>📌 Octubre (Actual)</span>
                 </button>
 
                 <button @click="selectMonth('next')" 
                         :class="selectedMonth === 'next' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
                         class="px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <span>Mes Siguiente ➡</span>
+                    <span>Noviembre ➡</span>
                 </button>
 
                 <button @click="exportMonthPDF()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
@@ -138,23 +138,23 @@
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Estado General</p>
-                <h3 class="text-lg font-black text-blue-600 mt-0.5">Dinámico / En Blanco</h3>
-                <p class="text-xs text-slate-400">Programación por calendario</p>
+                <h3 class="text-lg font-black text-blue-600 mt-0.5">Automático / Manual</h3>
+                <p class="text-xs text-slate-400">Máx 3 auto / Máx 4 manual</p>
             </div>
         </div>
 
         <!-- Pestañas de Navegación -->
         <div class="flex space-x-2 border-b border-slate-200 pb-2 no-print">
             <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">📅 Calendario del Mes</button>
-            <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio (Orden Alfabético)</button>
+            <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO (EN BLANCO INICIALMENTE) -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
         <div x-show="activeTab === 'calendar'" class="space-y-6">
             <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Calendario Operativo - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Visualiza los días del mes. Los fines de semana y feriados están señalizados. Haz clic en un día para programar.</p>
+                    <p class="text-xs text-slate-500">Visualiza los días del mes. Máximo 3 estaciones por día (Automático) o hasta 4 (Manual). Fines de semana y feriados señalizados.</p>
                 </div>
                 <div class="flex items-center space-x-3 text-xs">
                     <span class="flex items-center"><span class="w-3 h-3 bg-white border border-slate-300 rounded-sm inline-block mr-1"></span> Día Hábil</span>
@@ -207,7 +207,7 @@
                                               :class="visit.status === 'Programada' ? 'bg-[#00875A]' : 'bg-[#E30613]'"
                                               x-text="visit.status"></span>
                                     </div>
-                                    <!-- Botones de Cancelar, Reprogramar (con Calendario) y Eliminar -->
+                                    <!-- Botones de Cancelar, Reprogramar y Eliminar -->
                                     <div class="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200 text-[9px] text-center no-print">
                                         <button @click.stop="cancelVisit(visit)" class="text-amber-700 font-bold hover:underline">Cancelar</button>
                                         <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprogramar</button>
@@ -226,14 +226,19 @@
             </div>
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE LAS 94 ESTACIONES (ORDEN ALFABÉTICO) -->
+        <!-- VISTA 2: DIRECTORIO DE ESTACIONES Y GENERADOR AUTOMÁTICO -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Haz clic en el botón "Programar" para abrir el calendario visual del mes y seleccionar la fecha exacta.</p>
+                    <p class="text-xs text-slate-500">Puedes programar de forma individual o usar el Generador Automático (cubre el mes actual y siguiente, Martes a Viernes, sin feriados, máx. 3 por día).</p>
                 </div>
-                <input type="text" x-model="searchQuery" placeholder="Buscar por número o nombre de estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-72 outline-none focus:border-red-600 no-print">
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <button @click="generateAutomaticSchedule()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition flex items-center space-x-2">
+                        <span>⚡ Generar Orden Automático (Mes Actual y Siguiente)</span>
+                    </button>
+                    <input type="text" x-model="searchQuery" placeholder="Buscar estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-56 outline-none focus:border-red-600">
+                </div>
             </div>
 
             <div class="overflow-x-auto max-h-[600px] overflow-y-auto border rounded-xl">
@@ -261,7 +266,7 @@
                                 <td class="p-2.5 text-slate-600" x-text="st.region"></td>
                                 <td class="p-2.5 text-center no-print">
                                     <button @click="openCalendarPickerForStation(st)" class="puma-green text-white px-3 py-1.5 rounded text-[11px] font-bold shadow hover:opacity-95 transition">
-                                        📅 Programar (Abrir Calendario)
+                                        📅 Programar (Manual)
                                     </button>
                                 </td>
                             </tr>
@@ -273,7 +278,7 @@
 
     </main>
 
-    <!-- Modal de Calendario Visual Interactivo (Para Programar y Reprogramar con Calendario) -->
+    <!-- Modal de Calendario Visual Interactivo -->
     <div x-show="showCalendarModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -284,7 +289,6 @@
                 <button @click="showCalendarModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
             </div>
 
-            <!-- Mini Calendario Visual en el Modal -->
             <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
                     <div @click="handleCalendarDateSelection(dayObj.dateStr)"
@@ -309,11 +313,11 @@
         </div>
     </div>
 
-    <!-- Modal de Programación por Clic en el Calendario Principal -->
+    <!-- Modal de Programación Manual -->
     <div x-show="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-xl">
-            <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visita para el ' + modalDateLabel"></h3>
-            <p class="text-xs text-slate-500">Selecciona la estación que deseas programar en este día para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
+            <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visita Manual para el ' + modalDateLabel"></h3>
+            <p class="text-xs text-slate-500">Límite manual: <span class="font-bold text-red-600">máximo 4 estaciones por día</span> para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
             
             <div class="space-y-2">
                 <label class="text-xs font-bold text-slate-700">Estación:</label>
@@ -337,12 +341,12 @@
 
             <div class="flex justify-end space-x-2 pt-3">
                 <button @click="showModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Guardar Visita</button>
+                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Guardar Visita Manual</button>
             </div>
         </div>
     </div>
 
-    <!-- Script de Datos y Lógica con Alpine.js -->
+    <!-- Script con Lógica Bimensual, Restricciones y Generador Automático -->
     <script>
         function pumaPlanner() {
             return {
@@ -352,7 +356,7 @@
                 searchQuery: '',
                 showModal: false,
                 showCalendarModal: false,
-                calendarMode: 'schedule', // 'schedule' o 'reprogram'
+                calendarMode: 'schedule',
                 activeStationToSchedule: null,
                 activeVisitToReprogram: null,
                 modalDateStr: '',
@@ -426,75 +430,75 @@
                     { id: 23, name: "Colon Zona Libre", region: "Panamá / Otras", trainer: "Alexis León" },
                     { id: 24, name: "Coquito", region: "Chiriquí", trainer: "Gabriel Vergara" },
                     { id: 25, name: "Coronado", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 26, name: "Cuervito", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 27, name: "Curundu", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 28, name: "Dana", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 29, name: "David Central", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 30, name: "David Vía Aeropuerto", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 31, name: "Dorado", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 26, name: "Cubita", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 27, name: "Cuervito", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 28, name: "Curundu", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 29, name: "Dana", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 30, name: "David Central", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 31, name: "David Vía Aeropuerto", region: "Chiriquí", trainer: "Gabriel Vergara" },
                     { id: 32, name: "Dorada Park", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 33, name: "Eddi", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 34, name: "el coco", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 33, name: "Dorado", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 34, name: "Eddi", region: "Panamá / Otras", trainer: "Alexis León" },
                     { id: 35, name: "El Bosque", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 36, name: "el roble", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 37, name: "Epave", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 38, name: "Frontera", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 39, name: "Frontera 2", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 40, name: "Hacienda Santa Fe", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 41, name: "Hato Montaña", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 42, name: "Hipodromo", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 43, name: "inter boquete", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 44, name: "Internacional", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 45, name: "Juan Díaz", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 46, name: "La Ermita", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 47, name: "la mitra", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 48, name: "la riviera", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 49, name: "Las Americas", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 50, name: "Las cumbres", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 51, name: "Las Mendozas", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 52, name: "Llano Bonito", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 53, name: "Loceria", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 54, name: "Los Nogales", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 55, name: "Los pueblos", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 56, name: "mamá Oly", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 57, name: "Mareasa Vía Rápida", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 58, name: "Milla 1", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 59, name: "Milla 8", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 60, name: "Morelos", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 61, name: "On the go chorrera", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 62, name: "Panamá", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 63, name: "Panamá Norte", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 64, name: "Parita", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 65, name: "Pedregal", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 66, name: "Penonome", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 67, name: "Perejil", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 68, name: "Plaza El Sol", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 69, name: "Porta Norte", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 70, name: "Rodman", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 71, name: "Sabanitas", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 72, name: "Sahary", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 73, name: "Santa Cruz", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 74, name: "Santa Marta", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 75, name: "Santiago", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 76, name: "Speedway", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 77, name: "Tierras Altas", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 78, name: "Torremolinos", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 79, name: "trébol", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 80, name: "Tumba Muerto", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 81, name: "Urraca", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 82, name: "vacamonte", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 83, name: "vacamonte 2", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 84, name: "Valle Hermoso", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 85, name: "Via Argentina", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 86, name: "Vía Bolívar", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 87, name: "Via Porras", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 88, name: "Via Tocumen", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 89, name: "villa de de la fuente", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 90, name: "Villa lobos", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 91, name: "vista alegre", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 92, name: "Volcán", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 93, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 94, name: "4 Altos", region: "Panamá / Otras", trainer: "Alexis León" }
+                    { id: 36, name: "el coco", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 37, name: "el roble", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 38, name: "Epave", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 39, name: "Frontera", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 40, name: "Frontera 2", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 41, name: "Hacienda Santa Fe", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 42, name: "Hato Montaña", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 43, name: "Hipodromo", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 44, name: "inter boquete", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 45, name: "Internacional", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 46, name: "Juan Díaz", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 47, name: "La Ermita", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 48, name: "la mitra", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 49, name: "la riviera", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 50, name: "Las Americas", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 51, name: "Las cumbres", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 52, name: "Las Mendozas", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 53, name: "Llano Bonito", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 54, name: "Loceria", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 55, name: "Los Nogales", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 56, name: "Los pueblos", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 57, name: "mamá Oly", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 58, name: "Mareasa Vía Rápida", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 59, name: "Milla 1", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 60, name: "Milla 8", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 61, name: "Morelos", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 62, name: "On the go chorrera", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 63, name: "Panamá", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 64, name: "Panamá Norte", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 65, name: "Parita", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 66, name: "Pedregal", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 67, name: "Penonome", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 68, name: "Perejil", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 69, name: "Plaza El Sol", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 70, name: "Porta Norte", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 71, name: "Rodman", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 72, name: "Sabanitas", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 73, name: "Sahary", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 74, name: "Santa Cruz", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 75, name: "Santa Marta", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 76, name: "Santiago", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 77, name: "Speedway", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 78, name: "Tierras Altas", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 79, name: "Torremolinos", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 80, name: "trébol", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 81, name: "Tumba Muerto", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 82, name: "Urraca", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 83, name: "vacamonte", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 84, name: "vacamonte 2", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 85, name: "Valle Hermoso", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 86, name: "Via Argentina", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 87, name: "Vía Bolívar", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 88, name: "Via Porras", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 89, name: "Via Tocumen", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 90, name: "villa de de la fuente", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 91, name: "Villa lobos", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 92, name: "vista alegre", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 93, name: "Volcán", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 94, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" }
                 ],
 
                 visits: {
@@ -539,7 +543,7 @@
                         if (this.selectedMonth === 'prev') dateStr = `2026-09-${dayNumStr}`;
                         if (this.selectedMonth === 'next') dateStr = `2026-11-${dayNumStr}`;
 
-                        let d = new Date(dateStr);
+                        let d = new Date(dateStr + 'T00:00:00');
                         let dayOfWeek = d.getDay();
                         let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                         let isHoliday = holidays.includes(dateStr);
@@ -586,11 +590,21 @@
                         if (!this.activeStationToSchedule) return;
                         let st = this.activeStationToSchedule;
 
-                        if (!this.visits[this.selectedMonth]) {
-                            this.visits[this.selectedMonth] = [];
+                        let targetMonthKey = 'current';
+                        if (dateStr.startsWith('2026-09')) targetMonthKey = 'prev';
+                        if (dateStr.startsWith('2026-11')) targetMonthKey = 'next';
+
+                        let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === dateStr && v.trainer === st.trainer);
+                        if (existingOnDate.length >= 4) {
+                            alert(`Límite alcanzado: Ya hay 4 estaciones programadas para este capacitador el ${dateStr}. (Máximo manual: 4)`);
+                            return;
                         }
 
-                        this.visits[this.selectedMonth].push({
+                        if (!this.visits[targetMonthKey]) {
+                            this.visits[targetMonthKey] = [];
+                        }
+
+                        this.visits[targetMonthKey].push({
                             id: Date.now() + Math.floor(Math.random()*1000),
                             dateStr: dateStr,
                             trainer: st.trainer,
@@ -599,7 +613,7 @@
                             status: 'Programada'
                         });
 
-                        alert(`¡Estación #${st.id} (${st.name}) programada con éxito para el ${dateStr}!`);
+                        alert(`¡Estación #${st.id} (${st.name}) programada manualmente con éxito para el ${dateStr}!`);
                     } else if (this.calendarMode === 'reprogram') {
                         if (!this.activeVisitToReprogram) return;
                         let visit = this.activeVisitToReprogram;
@@ -620,11 +634,21 @@
                     let st = this.stations.find(s => s.id == this.modalSelectedStationId);
                     if (!st) return;
 
-                    if (!this.visits[this.selectedMonth]) {
-                        this.visits[this.selectedMonth] = [];
+                    let targetMonthKey = 'current';
+                    if (this.modalDateStr.startsWith('2026-09')) targetMonthKey = 'prev';
+                    if (this.modalDateStr.startsWith('2026-11')) targetMonthKey = 'next';
+
+                    let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === this.modalDateStr && v.trainer === this.currentTrainer);
+                    if (existingOnDate.length >= 4) {
+                        alert(`Límite alcanzado: Ya hay 4 estaciones programadas para ${this.currentTrainer} el ${this.modalDateStr}. (Máximo manual: 4)`);
+                        return;
                     }
 
-                    this.visits[this.selectedMonth].push({
+                    if (!this.visits[targetMonthKey]) {
+                        this.visits[targetMonthKey] = [];
+                    }
+
+                    this.visits[targetMonthKey].push({
                         id: Date.now() + Math.floor(Math.random()*1000),
                         dateStr: this.modalDateStr,
                         trainer: this.currentTrainer,
@@ -636,6 +660,71 @@
                     this.showModal = false;
                 },
 
+                generateAutomaticSchedule() {
+                    if (!confirm(`¿Desea generar el orden automático de visitas (Mes actual y Siguiente) para ${this.currentTrainer}? Esto asignará hasta 3 estaciones por día (martes a viernes, sin feriados).`)) {
+                        return;
+                    }
+
+                    let trainerStations = this.stations.filter(s => s.trainer === this.currentTrainer);
+                    if (trainerStations.length === 0) {
+                        alert("No hay estaciones asignadas a este capacitador.");
+                        return;
+                    }
+
+                    let monthsToProcess = [
+                        { key: 'current', daysCount: 31, prefix: '2026-10' },
+                        { key: 'next', daysCount: 30, prefix: '2026-11' }
+                    ];
+
+                    let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
+                    let stationIndex = 0;
+                    let assignedCount = 0;
+
+                    for (let m of monthsToProcess) {
+                        let validDays = [];
+                        for (let i = 1; i <= m.daysCount; i++) {
+                            let dayNumStr = i < 10 ? '0' + i : '' + i;
+                            let dateStr = `${m.prefix}-${dayNumStr}`;
+                            let d = new Date(dateStr + 'T00:00:00');
+                            let dow = d.getDay();
+
+                            if (dow >= 2 && dow <= 5 && !holidays.includes(dateStr)) {
+                                validDays.push(dateStr);
+                            }
+                        }
+
+                        if (!this.visits[m.key]) {
+                            this.visits[m.key] = [];
+                        }
+
+                        for (let dateStr of validDays) {
+                            let dailyCount = 0;
+                            while (dailyCount < 3 && stationIndex < trainerStations.length) {
+                                let st = trainerStations[stationIndex];
+                                
+                                this.visits[m.key].push({
+                                    id: Date.now() + Math.floor(Math.random()*10000),
+                                    dateStr: dateStr,
+                                    trainer: st.trainer,
+                                    stationName: `${st.id}. ${st.name}`,
+                                    type: 'Auditoría',
+                                    status: 'Programada'
+                                });
+
+                                stationIndex++;
+                                dailyCount++;
+                                assignedCount++;
+
+                                if (stationIndex >= trainerStations.length) {
+                                    stationIndex = 0;
+                                }
+                            }
+                        }
+                    }
+
+                    alert(`¡Orden automático generado con éxito! Se programaron ${assignedCount} visitas bimensuales (máx. 3 por día, martes a viernes, sin feriados) para ${this.currentTrainer}.`);
+                },
+
                 cancelVisit(visit) {
                     if (confirm(`¿Desea cancelar la visita a ${visit.stationName}?`)) {
                         visit.status = 'Cancelada';
@@ -644,11 +733,14 @@
 
                 deleteVisit(visit) {
                     if (confirm(`¿Está seguro de eliminar por completo la programación de ${visit.stationName}?`)) {
-                        let monthVisits = this.visits[this.selectedMonth];
-                        let index = monthVisits.findIndex(v => v.id === visit.id);
-                        if (index !== -1) {
-                            monthVisits.splice(index, 1);
-                        }
+                        ['prev', 'current', 'next'].forEach(mKey => {
+                            if (this.visits[mKey]) {
+                                let idx = this.visits[mKey].findIndex(v => v.id === visit.id);
+                                if (idx !== -1) {
+                                    this.visits[mKey].splice(idx, 1);
+                                }
+                            }
+                        });
                     }
                 },
 
