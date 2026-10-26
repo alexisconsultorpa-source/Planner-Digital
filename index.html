@@ -167,7 +167,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
                     <div @click="openScheduleModalFromCalendar(dayObj)" 
-                         class="bg-white rounded-xl p-3 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between min-h-[130px]"
+                         class="bg-white rounded-xl p-3 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between min-h-[140px]"
                          :class="{
                              'bg-amber-50/60 border-amber-200': dayObj.isWeekend,
                              'bg-red-50/60 border-red-200': dayObj.isHoliday,
@@ -193,6 +193,7 @@
                             </template>
                         </div>
 
+                        <!-- Visitas Programadas en este Día -->
                         <div class="space-y-1.5 my-2">
                             <template x-for="visit in getVisitsForDate(dayObj.dateStr)" :key="visit.id">
                                 <div class="p-1.5 rounded text-[11px] font-bold border flex flex-col space-y-1"
@@ -206,9 +207,11 @@
                                               :class="visit.status === 'Programada' ? 'bg-[#00875A]' : 'bg-[#E30613]'"
                                               x-text="visit.status"></span>
                                     </div>
-                                    <div class="flex justify-between pt-1 border-t border-slate-200 text-[10px] no-print">
-                                        <button @click.stop="cancelVisit(visit)" class="text-red-700 font-bold hover:underline">❌ Cancelar</button>
-                                        <button @click.stop="reprogramVisit(visit)" class="text-blue-700 font-bold hover:underline">🔄 Reprogramar</button>
+                                    <!-- Botones de Cancelar, Reprogramar (con Calendario) y Eliminar -->
+                                    <div class="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200 text-[9px] text-center no-print">
+                                        <button @click.stop="cancelVisit(visit)" class="text-amber-700 font-bold hover:underline">Cancelar</button>
+                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprogramar</button>
+                                        <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Eliminar</button>
                                     </div>
                                 </div>
                             </template>
@@ -223,7 +226,7 @@
             </div>
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE LAS 92 ESTACIONES CON CALENDARIO DESPLEGABLE EN BOTÓN PROGRAMAR -->
+        <!-- VISTA 2: DIRECTORIO DE LAS 92 ESTACIONES -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
@@ -270,13 +273,13 @@
 
     </main>
 
-    <!-- Modal de Calendario Visual Interactivo para Directorio -->
+    <!-- Modal de Calendario Visual Interactivo (Para Programar y Reprogramar con Calendario) -->
     <div x-show="showCalendarModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800" x-text="'Programar Estación: ' + (activeStationToSchedule ? activeStationToSchedule.id + '. ' + activeStationToSchedule.name : '')"></h3>
-                    <p class="text-xs text-slate-500" x-text="'Selecciona el día en el calendario de ' + selectedMonthLabel + ' para ' + currentTrainer"></p>
+                    <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
+                    <p class="text-xs text-slate-500" x-text="calendarModalSubtitle"></p>
                 </div>
                 <button @click="showCalendarModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
             </div>
@@ -284,7 +287,7 @@
             <!-- Mini Calendario Visual en el Modal -->
             <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
-                    <div @click="selectDateAndSchedule(dayObj.dateStr)"
+                    <div @click="handleCalendarDateSelection(dayObj.dateStr)"
                          class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center hover:border-red-600 hover:bg-red-50"
                          :class="{
                              'bg-amber-50 border-amber-200 text-amber-900': dayObj.isWeekend,
@@ -349,7 +352,9 @@
                 searchQuery: '',
                 showModal: false,
                 showCalendarModal: false,
+                calendarMode: 'schedule', // 'schedule' o 'reprogram'
                 activeStationToSchedule: null,
+                activeVisitToReprogram: null,
                 modalDateStr: '',
                 modalDateLabel: '',
                 modalSelectedStationId: '',
@@ -373,6 +378,22 @@
                     if (this.selectedMonth === 'prev') return this.prevMonthLabel;
                     if (this.selectedMonth === 'current') return this.currentMonthLabel;
                     return this.nextMonthLabel;
+                },
+
+                get calendarModalTitle() {
+                    if (this.calendarMode === 'schedule') {
+                        return 'Programar Estación: ' + (this.activeStationToSchedule ? this.activeStationToSchedule.id + '. ' + this.activeStationToSchedule.name : '');
+                    } else {
+                        return 'Reprogramar Visita: ' + (this.activeVisitToReprogram ? this.activeVisitToReprogram.stationName : '');
+                    }
+                },
+
+                get calendarModalSubtitle() {
+                    if (this.calendarMode === 'schedule') {
+                        return 'Selecciona el día en el calendario de ' + this.selectedMonthLabel + ' para ' + this.currentTrainer;
+                    } else {
+                        return 'Selecciona la nueva fecha en el calendario para la reprogramación';
+                    }
                 },
 
                 selectMonth(month) {
@@ -548,29 +569,47 @@
 
                 openCalendarPickerForStation(st) {
                     this.activeStationToSchedule = st;
+                    this.activeVisitToReprogram = null;
+                    this.calendarMode = 'schedule';
                     this.showCalendarModal = true;
                 },
 
-                selectDateAndSchedule(dateStr) {
-                    if (!this.activeStationToSchedule) return;
-                    let st = this.activeStationToSchedule;
+                openCalendarPickerForReprogram(visit) {
+                    this.activeVisitToReprogram = visit;
+                    this.activeStationToSchedule = null;
+                    this.calendarMode = 'reprogram';
+                    this.showCalendarModal = true;
+                },
 
-                    if (!this.visits[this.selectedMonth]) {
-                        this.visits[this.selectedMonth] = [];
+                handleCalendarDateSelection(dateStr) {
+                    if (this.calendarMode === 'schedule') {
+                        if (!this.activeStationToSchedule) return;
+                        let st = this.activeStationToSchedule;
+
+                        if (!this.visits[this.selectedMonth]) {
+                            this.visits[this.selectedMonth] = [];
+                        }
+
+                        this.visits[this.selectedMonth].push({
+                            id: Date.now() + Math.floor(Math.random()*1000),
+                            dateStr: dateStr,
+                            trainer: st.trainer,
+                            stationName: `${st.id}. ${st.name}`,
+                            type: 'Auditoría',
+                            status: 'Programada'
+                        });
+
+                        alert(`¡Estación #${st.id} (${st.name}) programada con éxito para el ${dateStr}!`);
+                    } else if (this.calendarMode === 'reprogram') {
+                        if (!this.activeVisitToReprogram) return;
+                        let visit = this.activeVisitToReprogram;
+
+                        visit.dateStr = dateStr;
+                        visit.status = 'Programada';
+                        alert(`Visita a ${visit.stationName} reprogramada exitosamente para el ${dateStr}.`);
                     }
 
-                    this.visits[this.selectedMonth].push({
-                        id: Date.now() + Math.floor(Math.random()*1000),
-                        dateStr: dateStr,
-                        trainer: st.trainer,
-                        stationName: `${st.id}. ${st.name}`,
-                        type: 'Auditoría',
-                        status: 'Programada'
-                    });
-
-                    alert(`¡Estación #${st.id} (${st.name}) programada con éxito para el ${dateStr}!`);
                     this.showCalendarModal = false;
-                    this.activeTab = 'calendar';
                 },
 
                 saveModalVisit() {
@@ -603,12 +642,13 @@
                     }
                 },
 
-                reprogramVisit(visit) {
-                    let newDate = prompt(`Reprogramar ${visit.stationName}\nIngrese la nueva fecha (ej. 2026-10-20):`, visit.dateStr);
-                    if (newDate) {
-                        visit.dateStr = newDate;
-                        visit.status = 'Programada';
-                        alert(`Visita reprogramada exitosamente para ${newDate}.`);
+                deleteVisit(visit) {
+                    if (confirm(`¿Está seguro de eliminar por completo la programación de ${visit.stationName}?`)) {
+                        let monthVisits = this.visits[this.selectedMonth];
+                        let index = monthVisits.findIndex(v => v.id === visit.id);
+                        if (index !== -1) {
+                            monthVisits.splice(index, 1);
+                        }
                     }
                 },
 
