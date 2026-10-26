@@ -14,7 +14,6 @@
         .text-puma-red { color: #E30613; }
         .text-puma-green { color: #00875A; }
         
-        /* Estilos optimizados para la generación e impresión en PDF */
         @media print {
             header, nav, .no-print {
                 display: none !important;
@@ -51,11 +50,11 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR BIMENSUAL DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, Ajuste Automático y Reportes de Estaciones</p>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 92 Estaciones y Programación Dinámica</p>
                 </div>
             </div>
 
-            <!-- Espacio Personalizado para el Capacitador -->
+            <!-- Selector de Capacitador Activo -->
             <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl flex items-center space-x-4 border border-white/20">
                 <div class="w-10 h-10 rounded-full bg-white text-[#E30613] font-black flex items-center justify-center text-sm shadow">
                     <span x-text="trainerInitials">AL</span>
@@ -65,11 +64,11 @@
                         <span class="text-xs uppercase text-red-200 font-bold">Capacitador Activo:</span>
                         <select x-model="currentTrainer" class="bg-white text-slate-900 text-xs font-bold rounded px-2 py-0.5 outline-none cursor-pointer">
                             <option value="Alexis León">Alexis León</option>
-                            <option value="Capacitador 2">Capacitador 2</option>
+                            <option value="Gabriel Vergara">Gabriel Vergara</option>
                         </select>
                     </div>
                     <p class="text-sm font-black tracking-wide" x-text="currentTrainer"></p>
-                    <p class="text-[10px] text-white/80">Zonas: Panamá Metro, Panamá Oeste, Chiriquí</p>
+                    <p class="text-[10px] text-white/80">Gestión de 92 Estaciones Puma</p>
                 </div>
             </div>
 
@@ -82,7 +81,6 @@
         <!-- Banner de Perfil y Selector de Meses -->
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4">
             
-            <!-- Nombre visible del Capacitador e Info de Mes -->
             <div class="flex items-center space-x-3">
                 <div class="p-3 puma-red text-white rounded-xl font-bold text-center min-w-[70px]">
                     <span class="text-xs block uppercase">Mes</span>
@@ -95,38 +93,34 @@
                 </div>
             </div>
 
-            <!-- Navegador de Meses (Mes Anterior, Mes en Curso, Mes Siguiente) -->
+            <!-- Navegador de Meses y Exportación PDF -->
             <div class="flex flex-wrap items-center gap-2 no-print">
                 <button @click="selectMonth('prev')" 
                         :class="selectedMonth === 'prev' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
                     <span>⬅ Mes Anterior</span>
-                    <span class="opacity-75 font-normal" x-text="'(' + prevMonthLabel + ')'"></span>
                 </button>
 
                 <button @click="selectMonth('current')" 
                         :class="selectedMonth === 'current' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
                     <span>📌 Mes en Curso</span>
-                    <span class="opacity-75 font-normal" x-text="'(' + currentMonthLabel + ')'"></span>
                 </button>
 
                 <button @click="selectMonth('next')" 
                         :class="selectedMonth === 'next' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
                     <span>Mes Siguiente ➡</span>
-                    <span class="opacity-75 font-normal" x-text="'(' + nextMonthLabel + ')'"></span>
                 </button>
 
-                <!-- Botón para Generar Reporte PDF del Mes Seleccionado -->
-                <button @click="exportMonthPDF()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition flex items-center space-x-1">
+                <button @click="exportMonthPDF()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
                     <span>📄 Exportar PDF del Mes</span>
                 </button>
             </div>
 
         </div>
 
-        <!-- Tarjetas de Métricas del Mes Seleccionado -->
+        <!-- Tarjetas de Métricas -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
@@ -156,13 +150,12 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio (92 Estaciones)</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO Y CONTROL DEL MES SELECCIONADO -->
+        <!-- VISTA 1: CALENDARIO -->
         <div x-show="activeTab === 'calendar'" class="space-y-6">
-            
             <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Vista Mensual Detallada - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Planificación de estaciones y bitácora de auto-reajustes para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
+                    <p class="text-xs text-slate-500">Planificación de estaciones y bitácora para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
                 </div>
                 <div class="no-print">
                     <button @click="runAutoReschedule()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
@@ -199,7 +192,6 @@
                                     <p class="text-[11px] text-slate-500 font-semibold" x-text="visit.type"></p>
                                     <p class="text-[10px] text-slate-400 italic" x-text="'Nota: ' + (visit.note || 'Sin novedades')"></p>
                                     
-                                    <!-- Controles de Cambio de Estado y Anotaciones (Solo en Pantalla) -->
                                     <div class="flex justify-between pt-1 border-t border-slate-200/60 no-print">
                                         <button @click="setStatus(visit, 'Completada')" class="text-emerald-700 font-bold text-[10px] hover:underline">✓ OK</button>
                                         <button @click="addNote(visit)" class="text-slate-600 font-bold text-[10px] hover:underline">📝 Nota</button>
@@ -211,41 +203,45 @@
                     </div>
                 </template>
             </div>
-
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE 92 ESTACIONES -->
+        <!-- VISTA 2: DIRECTORIO DE LAS 92 ESTACIONES CON BOTÓN DE PROGRAMAR MULTI-DÍA -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800">Maestro Completo de Estaciones Puma (92 Estaciones)</h3>
-                    <p class="text-xs text-slate-500">Asignación por Capacitador y estado general de cobertura.</p>
+                    <h3 class="text-base font-bold text-slate-800">Maestro Completo de las 92 Estaciones Puma</h3>
+                    <p class="text-xs text-slate-500">Programa visitas y repite la programación en múltiples días del mes con un solo clic.</p>
                 </div>
-                <input type="text" x-model="searchQuery" placeholder="Buscar estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-64 outline-none focus:border-red-600 no-print">
+                <input type="text" x-model="searchQuery" placeholder="Buscar por número o nombre de estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-72 outline-none focus:border-red-600 no-print">
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-[600px] overflow-y-auto border rounded-xl">
                 <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-100 text-slate-700 uppercase font-bold">
-                            <th class="p-2 border-b">N°</th>
-                            <th class="p-2 border-b">Nombre de Estación</th>
-                            <th class="p-2 border-b">Capacitador Asignado</th>
-                            <th class="p-2 border-b">Región</th>
-                            <th class="p-2 border-b">Estado</th>
+                    <thead class="bg-slate-100 text-slate-700 uppercase font-bold sticky top-0">
+                        <tr>
+                            <th class="p-2.5 border-b">N°</th>
+                            <th class="p-2.5 border-b">Nombre de Estación</th>
+                            <th class="p-2.5 border-b">Capacitador Asignado</th>
+                            <th class="p-2.5 border-b">Región</th>
+                            <th class="p-2.5 border-b text-center no-print">Acción de Programación</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <template x-for="st in filteredStations" :key="st.id">
                             <tr class="hover:bg-slate-50">
-                                <td class="p-2 font-bold text-slate-600" x-text="st.id"></td>
-                                <td class="p-2 font-semibold text-slate-800" x-text="st.name"></td>
-                                <td class="p-2 text-slate-700" x-text="st.trainer"></td>
-                                <td class="p-2 text-slate-600" x-text="st.region"></td>
-                                <td class="p-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold"
-                                          :class="st.status === 'Visitada' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
-                                          x-text="st.status"></span>
+                                <td class="p-2.5 font-bold text-slate-600" x-text="st.id"></td>
+                                <td class="p-2.5 font-semibold text-slate-800" x-text="st.name"></td>
+                                <td class="p-2.5">
+                                    <select x-model="st.trainer" class="border rounded px-2 py-1 text-xs bg-white font-medium">
+                                        <option value="Alexis León">Alexis León</option>
+                                        <option value="Gabriel Vergara">Gabriel Vergara</option>
+                                    </select>
+                                </td>
+                                <td class="p-2.5 text-slate-600" x-text="st.region"></td>
+                                <td class="p-2.5 text-center no-print">
+                                    <button @click="scheduleStation(st)" class="puma-green text-white px-3 py-1.5 rounded text-[11px] font-bold shadow hover:opacity-95 transition">
+                                        📅 Programar Visita
+                                    </button>
                                 </td>
                             </tr>
                         </template>
@@ -262,10 +258,9 @@
             return {
                 activeTab: 'calendar',
                 currentTrainer: 'Alexis León',
-                selectedMonth: 'current', // 'prev', 'current', 'next'
+                selectedMonth: 'current',
                 searchQuery: '',
 
-                // Nombres dinámicos de los meses
                 prevMonthLabel: 'Septiembre 2026',
                 currentMonthLabel: 'Octubre 2026',
                 nextMonthLabel: 'Noviembre 2026',
@@ -290,36 +285,116 @@
                     this.selectedMonth = month;
                 },
 
-                // Estaciones base (92 Total)
+                // Lista completa de las 92 estaciones Puma
                 stations: [
-                    { id: 1, name: "Tumba Muerto", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
-                    { id: 2, name: "Vía Bolívar", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
-                    { id: 3, name: "Centenial", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
-                    { id: 4, name: "Autopista", trainer: "Alexis León", region: "Panamá Oeste", status: "Programada" },
-                    { id: 13, name: "Hato Montaña", trainer: "Alexis León", region: "Panamá Oeste", status: "Visitada" },
-                    { id: 28, name: "Chorrera OdGo", trainer: "Alexis León", region: "Panamá Oeste", status: "Visitada" },
-                    { id: 71, name: "Channis", trainer: "Alexis León", region: "Panamá Este", status: "Suspendida" },
-                    { id: 72, name: "Hipódromo", trainer: "Alexis León", region: "Panamá Este", status: "Visitada" },
-                    { id: 89, name: "David Central", trainer: "Capacitador 2", region: "Chiriquí", status: "Programada" },
-                    { id: 90, name: "David Vía Aeropuerto", trainer: "Capacitador 2", region: "Chiriquí", status: "Programada" }
+                    { id: 1, name: "Tumba Muerto", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 2, name: "Vía Bolívar", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 3, name: "Centenial", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 4, name: "Autopista", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 5, name: "Las Américas", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 6, name: "Locería", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 7, name: "Bethania", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 8, name: "El Bosque", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 9, name: "Puma Arraiján", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 10, name: "Vacamonte", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 11, name: "Vacamonte 2", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 12, name: "Vista Alegre", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 13, name: "Hato Montaña", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 14, name: "Llano Bonito", trainer: "Alexis León", region: "Panamá Este" },
+                    { id: 15, name: "Arboleda", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 16, name: "Curundú", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 17, name: "Albrook", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 18, name: "Perejil", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 19, name: "Atlas", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 20, name: "Cativá", trainer: "Gabriel Vergara", region: "Colón" },
+                    { id: 21, name: "Cuatro Altos", trainer: "Gabriel Vergara", region: "Colón" },
+                    { id: 22, name: "Zona Libre", trainer: "Gabriel Vergara", region: "Colón" },
+                    { id: 23, name: "Plaza El Sol", trainer: "Gabriel Vergara", region: "Colón" },
+                    { id: 24, name: "Sabanitas", trainer: "Gabriel Vergara", region: "Colón" },
+                    { id: 25, name: "Villa La Fuente", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 26, name: "Milla 1", trainer: "Alexis León", region: "Panamá Norte" },
+                    { id: 27, name: "Milla 8", trainer: "Alexis León", region: "Panamá Norte" },
+                    { id: 28, name: "Chorrera OdGo", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 29, name: "Porta Norte", trainer: "Alexis León", region: "Panamá Norte" },
+                    { id: 30, name: "Estación 30", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 31, name: "Estación 31", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 32, name: "Estación 32", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 33, name: "Estación 33", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 34, name: "Estación 34", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 35, name: "Estación 35", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 36, name: "Estación 36", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 37, name: "Estación 37", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 38, name: "Estación 38", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 39, name: "La Ermita", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 40, name: "Antón", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 41, name: "Espavé", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 42, name: "Coronado", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 43, name: "El Roble", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 44, name: "Penonomé", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 45, name: "Aguadulce OdGo", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 46, name: "Internacional", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 47, name: "Urracá", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 48, name: "Santiago", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 49, name: "Atalaya", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 50, name: "Chitré", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 51, name: "Mamá Oly", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 52, name: "Cubita", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 53, name: "Eddi", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 54, name: "Speedway", trainer: "Gabriel Vergara", region: "Provincias Centrales" },
+                    { id: 55, name: "Burunga", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 56, name: "West Garden", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 57, name: "Dorada Park", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 58, name: "Hacienda Santa Fe", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 59, name: "Trébol", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 60, name: "Nogales", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 61, name: "Torremolinos", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 62, name: "Aeropuerto", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 63, name: "Los Pueblos", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 64, name: "Juan Díaz", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 65, name: "La Mitra", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 66, name: "Las Mendozas", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 67, name: "El Coco", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 68, name: "Capira", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 69, name: "La Chorrera", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 70, name: "Vía Argentina", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 71, name: "Channis", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 72, name: "Hipódromo", trainer: "Gabriel Vergara", region: "Panamá Este" },
+                    { id: 73, name: "Vía Porras", trainer: "Alexis León", region: "Panamá Metro" },
+                    { id: 74, name: "Rodman", trainer: "Alexis León", region: "Panamá Oeste" },
+                    { id: 75, name: "Interboquete", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 76, name: "Santa Cruz", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 77, name: "Algarrobos 1", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 78, name: "Algarrobos 2", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 79, name: "Coquito", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 80, name: "Frontera", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 81, name: "Frontera 2", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 82, name: "Cuervito", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 83, name: "Bugaba", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 84, name: "Santa Marta", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 85, name: "Sahary", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 86, name: "Tierras Altas", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 87, name: "Volcán", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 88, name: "La Riviera", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 89, name: "David Central", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 90, name: "David Vía Aeropuerto", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 91, name: "Mareasa Vía Rápida", trainer: "Gabriel Vergara", region: "Chiriquí" },
+                    { id: 92, name: "Dana", trainer: "Gabriel Vergara", region: "Chiriquí" }
                 ],
 
-                // Datos de la Agenda por Mes
+                // Agenda por Mes
                 monthData: {
                     prev: [
-                        { name: "SEMANA 1 (SEP)", date: "01 - 05 Sep", visits: [{ id: 201, stationName: "1. Tumba Muerto", type: "AUDITORÍA", status: "Completada", note: "Sin hallazgos" }, { id: 202, stationName: "2. Vía Bolívar", type: "EVALUACIÓN", status: "Completada", note: "100% Personal uniformado" }] },
-                        { name: "SEMANA 2 (SEP)", date: "08 - 12 Sep", visits: [{ id: 203, stationName: "3. Centenial", type: "AUDITORÍA", status: "Completada", note: "Cierre exitoso" }] }
+                        { name: "SEMANA 1 (SEP)", date: "01 - 05 Sep", visits: [{ id: 201, stationName: "1. Tumba Muerto", type: "AUDITORÍA", status: "Completada", note: "Sin hallazgos" }] }
                     ],
                     current: [
                         { name: "LUNES 12", date: "12 Oct", visits: [{ id: 101, stationName: "Administrativo", type: "OFICINA", status: "Completada", note: "Planificación mensual" }] },
-                        { name: "MARTES 13", date: "13 Oct", visits: [{ id: 102, stationName: "13. Hato Montaña", type: "EVALUACIÓN", status: "Completada", note: "Revisión de pista OK" }, { id: 103, stationName: "28. Chorrera OdGo", type: "AUDITORÍA", status: "Completada", note: "Turno mañana" }] },
-                        { name: "MIÉRCOLES 14", date: "14 Oct", visits: [{ id: 104, stationName: "71. Channis", type: "EVALUACIÓN", status: "Suspendida", note: "Lluvia torrencial" }, { id: 105, stationName: "72. Hipódromo", type: "EVALUACIÓN", status: "Completada", note: "Turno tarde" }] },
-                        { name: "JUEVES 15", date: "15 Oct", visits: [{ id: 106, stationName: "17. Albrook", type: "AUDITORÍA", status: "Completada", note: "Revisión de estándares" }, { id: 107, stationName: "71. Channis (Reajuste)", type: "EVALUACIÓN", status: "Programada", note: "Reinsertada por auto-reajuste" }] },
-                        { name: "VIERNES 16", date: "16 Oct", visits: [{ id: 108, stationName: "4. Autopista", type: "EVALUACIÓN", status: "Programada", note: "Pendiente" }] }
+                        { name: "MARTES 13", date: "13 Oct", visits: [{ id: 102, stationName: "13. Hato Montaña", type: "EVALUACIÓN", status: "Completada", note: "Revisión OK" }] },
+                        { name: "MIÉRCOLES 14", date: "14 Oct", visits: [{ id: 103, stationName: "71. Channis", type: "EVALUACIÓN", status: "Suspendida", note: "Lluvia" }] },
+                        { name: "JUEVES 15", date: "15 Oct", visits: [{ id: 104, stationName: "17. Albrook", type: "AUDITORÍA", status: "Completada", note: "Estándares OK" }] },
+                        { name: "VIERNES 16", date: "16 Oct", visits: [{ id: 105, stationName: "4. Autopista", type: "EVALUACIÓN", status: "Programada", note: "Pendiente" }] }
                     ],
                     next: [
-                        { name: "SEMANA 1 (NOV)", date: "02 - 06 Nov", visits: [{ id: 301, stationName: "71. Channis (Prioridad)", type: "EVALUACIÓN", status: "Programada", note: "Priorizada desde Octubre" }] },
-                        { name: "SEMANA 2 (NOV)", date: "09 - 13 Nov", visits: [{ id: 302, stationName: "89. David Central", type: "AUDITORÍA", status: "Programada", note: "Gira Chiriquí" }] }
+                        { name: "SEMANA 1 (NOV)", date: "02 - 06 Nov", visits: [{ id: 301, stationName: "71. Channis (Prioridad)", type: "EVALUACIÓN", status: "Programada", note: "Reprogramada" }] }
                     ]
                 },
 
@@ -365,8 +440,33 @@
                     }
                 },
 
+                // Función de Programación Multidía solicitada
+                scheduleStation(st) {
+                    let keepScheduling = true;
+                    while (keepScheduling) {
+                        let dateInput = prompt(`Programar visita para la estación #${st.id} - ${st.name}\nIngrese el día y turno (ej. Jueves 15 / Turno Tarde):`);
+                        if (!dateInput) break;
+
+                        let activityType = prompt(`Seleccione el tipo de actividad:\n1. Auditoría\n2. Evaluación de Experiencia del Cliente\n3. Administrativo`, "Evaluación");
+                        if (!activityType) break;
+
+                        let targetDay = this.monthData[this.selectedMonth][0];
+                        targetDay.visits.push({
+                            id: Date.now() + Math.floor(Math.random()*1000),
+                            stationName: `${st.id}. ${st.name}`,
+                            type: activityType.toUpperCase(),
+                            status: 'Programada',
+                            note: `Programado para ${dateInput}`
+                        });
+
+                        alert(`¡Estación #${st.id} (${st.name}) programada con éxito para ${dateInput}!`);
+
+                        keepScheduling = confirm(`¿Desea programar la estación #${st.id} (${st.name}) en OTRO día diferente para este mes (${this.selectedMonthLabel})?`);
+                    }
+                },
+
                 runAutoReschedule() {
-                    alert('⚡ [Smart Scheduler]: El sistema analizó la agenda de ' + this.currentTrainer + ', detectó las visitas suspendidas de ' + this.selectedMonthLabel + ' y las reubicó automáticamente en los días libres sin colisionar rutas.');
+                    alert('⚡ [Smart Scheduler]: El sistema analizó la agenda de ' + this.currentTrainer + ', detectó las visitas suspendidas de ' + this.selectedMonthLabel + ' y las reubicó automáticamente.');
                 },
 
                 exportMonthPDF() {
