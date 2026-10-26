@@ -149,7 +149,7 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio (92 Estaciones)</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO (EN BLANCO INICIALMENTE) -->
         <div x-show="activeTab === 'calendar'" class="space-y-6">
             <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
@@ -166,7 +166,7 @@
             <!-- Grilla del Calendario Mensual -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
-                    <div @click="openScheduleModal(dayObj)" 
+                    <div @click="openScheduleModalFromCalendar(dayObj)" 
                          class="bg-white rounded-xl p-3 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between min-h-[130px]"
                          :class="{
                              'bg-amber-50/60 border-amber-200': dayObj.isWeekend,
@@ -213,22 +213,22 @@
                                 </div>
                             </template>
                             <template x-if="getVisitsForDate(dayObj.dateStr).length === 0">
-                                <p class="text-[10px] text-slate-400 italic text-center py-2">Haz clic para programar</p>
+                                <p class="text-[10px] text-slate-400 italic text-center py-2">En blanco</p>
                             </template>
                         </div>
 
-                        <div class="text-[10px] text-center text-slate-400 font-semibold no-print">+ Agregar visita</div>
+                        <div class="text-[10px] text-center text-slate-400 font-semibold no-print">+ Agregar</div>
                     </div>
                 </template>
             </div>
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE LAS 92 ESTACIONES -->
+        <!-- VISTA 2: DIRECTORIO DE LAS 92 ESTACIONES CON CALENDARIO DESPLEGABLE EN BOTÓN PROGRAMAR -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro Completo de las 92 Estaciones Puma</h3>
-                    <p class="text-xs text-slate-500">Las estaciones en Chiriquí están asignadas automáticamente a Gabriel Vergara; el resto a Alexis León.</p>
+                    <p class="text-xs text-slate-500">Haz clic en el botón "Programar" para abrir el calendario visual del mes y seleccionar la fecha exacta.</p>
                 </div>
                 <input type="text" x-model="searchQuery" placeholder="Buscar por número o nombre de estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-72 outline-none focus:border-red-600 no-print">
             </div>
@@ -241,7 +241,7 @@
                             <th class="p-2.5 border-b">Nombre de Estación</th>
                             <th class="p-2.5 border-b">Capacitador Asignado</th>
                             <th class="p-2.5 border-b">Región</th>
-                            <th class="p-2.5 border-b text-center no-print">Acción</th>
+                            <th class="p-2.5 border-b text-center no-print">Acción de Programación</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -257,8 +257,8 @@
                                 </td>
                                 <td class="p-2.5 text-slate-600" x-text="st.region"></td>
                                 <td class="p-2.5 text-center no-print">
-                                    <button @click="quickSchedule(st)" class="puma-green text-white px-3 py-1.5 rounded text-[11px] font-bold shadow hover:opacity-95 transition">
-                                        📅 Programar
+                                    <button @click="openCalendarPickerForStation(st)" class="puma-green text-white px-3 py-1.5 rounded text-[11px] font-bold shadow hover:opacity-95 transition">
+                                        📅 Programar (Abrir Calendario)
                                     </button>
                                 </td>
                             </tr>
@@ -270,7 +270,43 @@
 
     </main>
 
-    <!-- Modal de Programación por Día -->
+    <!-- Modal de Calendario Visual Interactivo para Directorio -->
+    <div x-show="showCalendarModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+        <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800" x-text="'Programar Estación: ' + (activeStationToSchedule ? activeStationToSchedule.id + '. ' + activeStationToSchedule.name : '')"></h3>
+                    <p class="text-xs text-slate-500" x-text="'Selecciona el día en el calendario de ' + selectedMonthLabel + ' para ' + currentTrainer"></p>
+                </div>
+                <button @click="showCalendarModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            </div>
+
+            <!-- Mini Calendario Visual en el Modal -->
+            <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
+                <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
+                    <div @click="selectDateAndSchedule(dayObj.dateStr)"
+                         class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center hover:border-red-600 hover:bg-red-50"
+                         :class="{
+                             'bg-amber-50 border-amber-200 text-amber-900': dayObj.isWeekend,
+                             'bg-red-50 border-red-200 text-red-900': dayObj.isHoliday,
+                             'bg-white border-slate-200 text-slate-800': !dayObj.isWeekend && !dayObj.isHoliday
+                         }">
+                        <span class="text-[9px] uppercase font-bold text-slate-400" x-text="dayObj.dayName"></span>
+                        <span class="text-sm font-black" x-text="dayObj.dayNum"></span>
+                        <template x-if="dayObj.isHoliday">
+                            <span class="text-[8px] bg-red-600 text-white px-1 rounded mt-0.5">Feriado</span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t">
+                <button @click="showCalendarModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Programación por Clic en el Calendario Principal -->
     <div x-show="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-xl">
             <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visita para el ' + modalDateLabel"></h3>
@@ -312,6 +348,8 @@
                 selectedMonth: 'current',
                 searchQuery: '',
                 showModal: false,
+                showCalendarModal: false,
+                activeStationToSchedule: null,
                 modalDateStr: '',
                 modalDateLabel: '',
                 modalSelectedStationId: '',
@@ -501,11 +539,38 @@
                     return this.getTrainerVisits().filter(v => v.dateStr === dateStr);
                 },
 
-                openScheduleModal(dayObj) {
+                openScheduleModalFromCalendar(dayObj) {
                     this.modalDateStr = dayObj.dateStr;
                     this.modalDateLabel = `${dayObj.dayName} ${dayObj.dayNum} (${this.selectedMonthLabel})`;
                     this.modalSelectedStationId = '';
                     this.showModal = true;
+                },
+
+                openCalendarPickerForStation(st) {
+                    this.activeStationToSchedule = st;
+                    this.showCalendarModal = true;
+                },
+
+                selectDateAndSchedule(dateStr) {
+                    if (!this.activeStationToSchedule) return;
+                    let st = this.activeStationToSchedule;
+
+                    if (!this.visits[this.selectedMonth]) {
+                        this.visits[this.selectedMonth] = [];
+                    }
+
+                    this.visits[this.selectedMonth].push({
+                        id: Date.now() + Math.floor(Math.random()*1000),
+                        dateStr: dateStr,
+                        trainer: st.trainer,
+                        stationName: `${st.id}. ${st.name}`,
+                        type: 'Auditoría',
+                        status: 'Programada'
+                    });
+
+                    alert(`¡Estación #${st.id} (${st.name}) programada con éxito para el ${dateStr}!`);
+                    this.showCalendarModal = false;
+                    this.activeTab = 'calendar';
                 },
 
                 saveModalVisit() {
@@ -530,27 +595,6 @@
                     });
 
                     this.showModal = false;
-                },
-
-                quickSchedule(st) {
-                    let dateInput = prompt(`Ingrese la fecha (ej. 2026-10-15) para programar la estación #${st.id} - ${st.name}:`, "2026-10-15");
-                    if (!dateInput) return;
-
-                    if (!this.visits[this.selectedMonth]) {
-                        this.visits[this.selectedMonth] = [];
-                    }
-
-                    this.visits[this.selectedMonth].push({
-                        id: Date.now() + Math.floor(Math.random()*1000),
-                        dateStr: dateInput,
-                        trainer: st.trainer,
-                        stationName: `${st.id}. ${st.name}`,
-                        type: 'Auditoría',
-                        status: 'Programada'
-                    });
-
-                    alert(`¡Estación #${st.id} (${st.name}) programada con éxito para la fecha ${dateInput}!`);
-                    this.activeTab = 'calendar';
                 },
 
                 cancelVisit(visit) {
