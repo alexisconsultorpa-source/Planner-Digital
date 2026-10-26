@@ -13,86 +13,175 @@
         .puma-green { background-color: #00875A; }
         .text-puma-red { color: #E30613; }
         .text-puma-green { color: #00875A; }
+        
+        /* Estilos optimizados para la generación e impresión en PDF */
+        @media print {
+            header, nav, .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+                color: black !important;
+                font-size: 11pt;
+            }
+            .print-container {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .card-print {
+                border: 1px solid #ccc !important;
+                break-inside: avoid;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans" x-data="pumaPlanner()">
 
-    <!-- Header Institucional -->
-    <header class="puma-red text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-black tracking-wide">PUMA ENERGY</h1>
-                <p class="text-sm opacity-90">Planificador Inteligente de Capacitaciones & Auditorías (Ciclo Bimensual)</p>
+    <!-- Header Institucional y Perfil del Capacitador -->
+    <header class="puma-red text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <!-- Logo y Título -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-[#E30613] font-black px-3 py-1.5 rounded-md text-xl tracking-tighter shadow">
+                    PUMA
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR BIMENSUAL DE CAPACITACIONES</h1>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, Ajuste Automático y Reportes de Estaciones</p>
+                </div>
             </div>
-            <div class="mt-3 md:mt-0 flex items-center space-x-4 bg-white/10 px-4 py-2 rounded-lg">
-                <span class="text-sm font-semibold">Capacitador Activo:</span>
-                <select x-model="currentTrainer" class="bg-white text-slate-900 text-sm font-bold rounded px-2 py-1 outline-none">
-                    <option value="Alexis León">Alexis León</option>
-                    <option value="Colega Asignado">Colega Asignado</option>
-                </select>
+
+            <!-- Espacio Personalizado para el Capacitador -->
+            <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl flex items-center space-x-4 border border-white/20">
+                <div class="w-10 h-10 rounded-full bg-white text-[#E30613] font-black flex items-center justify-center text-sm shadow">
+                    <span x-text="trainerInitials">AL</span>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs uppercase text-red-200 font-bold">Capacitador Activo:</span>
+                        <select x-model="currentTrainer" class="bg-white text-slate-900 text-xs font-bold rounded px-2 py-0.5 outline-none cursor-pointer">
+                            <option value="Alexis León">Alexis León</option>
+                            <option value="Capacitador 2">Capacitador 2</option>
+                        </select>
+                    </div>
+                    <p class="text-sm font-black tracking-wide" x-text="currentTrainer"></p>
+                    <p class="text-[10px] text-white/80">Zonas: Panamá Metro, Panamá Oeste, Chiriquí</p>
+                </div>
             </div>
+
         </div>
     </header>
 
     <!-- Contenedor Principal -->
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 print-container">
 
-        <!-- Tarjetas de Métricas -->
+        <!-- Banner de Perfil y Selector de Meses -->
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4">
+            
+            <!-- Nombre visible del Capacitador e Info de Mes -->
+            <div class="flex items-center space-x-3">
+                <div class="p-3 puma-red text-white rounded-xl font-bold text-center min-w-[70px]">
+                    <span class="text-xs block uppercase">Mes</span>
+                    <span class="text-lg font-black uppercase" x-text="selectedMonthName">OCT</span>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan Operativo Individual</span>
+                    <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
+                    <p class="text-xs text-slate-500" x-text="'Mostrando agenda para: ' + selectedMonthLabel + ' (' + getMonthVisitsCount() + ' visitas programadas)'"></p>
+                </div>
+            </div>
+
+            <!-- Navegador de Meses (Mes Anterior, Mes en Curso, Mes Siguiente) -->
+            <div class="flex flex-wrap items-center gap-2 no-print">
+                <button @click="selectMonth('prev')" 
+                        :class="selectedMonth === 'prev' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <span>⬅ Mes Anterior</span>
+                    <span class="opacity-75 font-normal" x-text="'(' + prevMonthLabel + ')'"></span>
+                </button>
+
+                <button @click="selectMonth('current')" 
+                        :class="selectedMonth === 'current' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <span>📌 Mes en Curso</span>
+                    <span class="opacity-75 font-normal" x-text="'(' + currentMonthLabel + ')'"></span>
+                </button>
+
+                <button @click="selectMonth('next')" 
+                        :class="selectedMonth === 'next' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <span>Mes Siguiente ➡</span>
+                    <span class="opacity-75 font-normal" x-text="'(' + nextMonthLabel + ')'"></span>
+                </button>
+
+                <!-- Botón para Generar Reporte PDF del Mes Seleccionado -->
+                <button @click="exportMonthPDF()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition flex items-center space-x-1">
+                    <span>📄 Exportar PDF del Mes</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Tarjetas de Métricas del Mes Seleccionado -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-slate-800">
-                <p class="text-xs font-bold text-slate-500 uppercase">Estaciones Totales</p>
-                <h3 class="text-2xl font-black text-slate-800 mt-1" x-text="stations.length">92</h3>
-                <p class="text-xs text-slate-400 mt-1">Universo completo de estaciones</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
+                <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
+                <h3 class="text-lg font-black text-slate-800 mt-0.5" x-text="currentTrainer"></h3>
+                <p class="text-xs text-slate-400">92 Estaciones en Sistema</p>
             </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-[#00875A]">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Visitas Completadas</p>
-                <h3 class="text-2xl font-black text-[#00875A] mt-1" x-text="completedCount">28</h3>
-                <p class="text-xs text-slate-400 mt-1" x-text="completionRate + '% Cobertura actual'"></p>
+                <h3 class="text-2xl font-black text-[#00875A] mt-0.5" x-text="getStats().completed"></h3>
+                <p class="text-xs text-slate-400" x-text="getStats().rate + '% Cobertura del mes'"></p>
             </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-[#E30613]">
-                <p class="text-xs font-bold text-slate-500 uppercase">Reprogramadas / Pendientes</p>
-                <h3 class="text-2xl font-black text-[#E30613] mt-1" x-text="suspendedCount">3</h3>
-                <p class="text-xs text-slate-400 mt-1">Auto-reajustadas por el sistema</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#E30613] card-print">
+                <p class="text-xs font-bold text-slate-500 uppercase">Reprogramadas / Suspendidas</p>
+                <h3 class="text-2xl font-black text-[#E30613] mt-0.5" x-text="getStats().suspended"></h3>
+                <p class="text-xs text-slate-400">Reajuste automático activo</p>
             </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-600">
-                <p class="text-xs font-bold text-slate-500 uppercase">Estado del Ciclo</p>
-                <h3 class="text-lg font-black text-blue-600 mt-1">Semana 3 / 7</h3>
-                <p class="text-xs text-slate-400 mt-1">Nivelación automática activa</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
+                <p class="text-xs font-bold text-slate-500 uppercase">Visitas Programadas</p>
+                <h3 class="text-2xl font-black text-blue-600 mt-0.5" x-text="getStats().pending"></h3>
+                <p class="text-xs text-slate-400">Pendientes en agenda</p>
             </div>
         </div>
 
         <!-- Pestañas de Navegación -->
-        <div class="flex space-x-2 border-b border-slate-200 pb-2">
-            <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">📅 Calendario y Ruta</button>
+        <div class="flex space-x-2 border-b border-slate-200 pb-2 no-print">
+            <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">📅 Agenda del Mes</button>
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio (92 Estaciones)</button>
-            <button @click="activeTab = 'proposal'" :class="activeTab === 'proposal' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">⚡ Propuesta Próximo Mes</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO Y CONTROL DIARIO -->
+        <!-- VISTA 1: CALENDARIO Y CONTROL DEL MES SELECCIONADO -->
         <div x-show="activeTab === 'calendar'" class="space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800">Control Operativo Semanal</h2>
-                    <p class="text-sm text-slate-500">Gestiona las visitas diarias, marca incidencias y reajusta rutas automáticamente.</p>
+                    <h3 class="text-base font-bold text-slate-800" x-text="'Vista Mensual Detallada - ' + selectedMonthLabel"></h3>
+                    <p class="text-xs text-slate-500">Planificación de estaciones y bitácora de auto-reajustes para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <button @click="runAutoReschedule()" class="puma-green text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:opacity-95 transition">
-                        ⚡ Ejecutar Auto-Reajuste
+                <div class="no-print">
+                    <button @click="runAutoReschedule()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
+                        ⚡ Ejecutar Auto-Reajuste de Rutas
                     </button>
                 </div>
             </div>
 
-            <!-- Grilla Semanal de Días -->
+            <!-- Grilla de la Agenda del Mes -->
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <template x-for="(day, index) in weekDays" :key="index">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
-                        <div class="bg-slate-100 p-3 rounded-t-xl border-b border-slate-200 text-center">
-                            <span class="text-xs font-black text-slate-600 uppercase" x-text="day.name"></span>
-                            <p class="text-sm font-bold text-slate-800" x-text="day.date"></p>
+                <template x-for="(day, index) in getActiveMonthDays()" :key="index">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col card-print">
+                        <div class="bg-slate-100 p-2.5 rounded-t-xl border-b border-slate-200 text-center">
+                            <span class="text-[11px] font-black text-slate-600 uppercase" x-text="day.name"></span>
+                            <p class="text-xs font-bold text-slate-800" x-text="day.date"></p>
                         </div>
-                        <div class="p-3 space-y-3 flex-1">
+                        <div class="p-2.5 space-y-2.5 flex-1">
                             <template x-for="visit in day.visits" :key="visit.id">
-                                <div class="p-3 rounded-lg border text-xs space-y-2 transition"
+                                <div class="p-2.5 rounded-lg border text-xs space-y-1.5 transition"
                                      :class="{
                                          'border-[#00875A] bg-emerald-50/50': visit.status === 'Completada',
                                          'border-[#E30613] bg-red-50/50': visit.status === 'Suspendida',
@@ -100,19 +189,21 @@
                                      }">
                                     <div class="flex justify-between items-start">
                                         <span class="font-black text-slate-800" x-text="visit.stationName"></span>
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold text-white"
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-white"
                                               :class="{
                                                   'puma-green': visit.status === 'Completada',
                                                   'puma-red': visit.status === 'Suspendida',
                                                   'bg-slate-500': visit.status === 'Programada'
                                               }" x-text="visit.status"></span>
                                     </div>
-                                    <p class="text-slate-500 font-semibold" x-text="visit.type"></p>
+                                    <p class="text-[11px] text-slate-500 font-semibold" x-text="visit.type"></p>
+                                    <p class="text-[10px] text-slate-400 italic" x-text="'Nota: ' + (visit.note || 'Sin novedades')"></p>
                                     
-                                    <!-- Controles de Cambio de Estado -->
-                                    <div class="flex justify-between pt-1 border-t border-slate-200/60">
-                                        <button @click="setStatus(visit, 'Completada')" class="text-emerald-700 font-bold hover:underline">✓ OK</button>
-                                        <button @click="setStatus(visit, 'Suspendida')" class="text-red-700 font-bold hover:underline">✕ Suspender</button>
+                                    <!-- Controles de Cambio de Estado y Anotaciones (Solo en Pantalla) -->
+                                    <div class="flex justify-between pt-1 border-t border-slate-200/60 no-print">
+                                        <button @click="setStatus(visit, 'Completada')" class="text-emerald-700 font-bold text-[10px] hover:underline">✓ OK</button>
+                                        <button @click="addNote(visit)" class="text-slate-600 font-bold text-[10px] hover:underline">📝 Nota</button>
+                                        <button @click="setStatus(visit, 'Suspendida')" class="text-red-700 font-bold text-[10px] hover:underline">✕ Suspender</button>
                                     </div>
                                 </div>
                             </template>
@@ -120,40 +211,39 @@
                     </div>
                 </template>
             </div>
+
         </div>
 
         <!-- VISTA 2: DIRECTORIO DE 92 ESTACIONES -->
-        <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4">
+        <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 class="text-lg font-bold text-slate-800">Maestro de Estaciones Puma (92 Registros)</h2>
-                <input type="text" x-model="searchQuery" placeholder="Buscar por nombre o número..." class="border rounded-lg px-3 py-2 text-sm w-full sm:w-72 outline-none focus:border-red-600">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">Maestro Completo de Estaciones Puma (92 Estaciones)</h3>
+                    <p class="text-xs text-slate-500">Asignación por Capacitador y estado general de cobertura.</p>
+                </div>
+                <input type="text" x-model="searchQuery" placeholder="Buscar estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-64 outline-none focus:border-red-600 no-print">
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
+                <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-bold">
-                            <th class="p-3">N°</th>
-                            <th class="p-3">Nombre de Estación</th>
-                            <th class="p-3">Capacitador Asignado</th>
-                            <th class="p-3">Zona / Región</th>
-                            <th class="p-3">Estado Actual</th>
+                        <tr class="bg-slate-100 text-slate-700 uppercase font-bold">
+                            <th class="p-2 border-b">N°</th>
+                            <th class="p-2 border-b">Nombre de Estación</th>
+                            <th class="p-2 border-b">Capacitador Asignado</th>
+                            <th class="p-2 border-b">Región</th>
+                            <th class="p-2 border-b">Estado</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <template x-for="st in filteredStations" :key="st.id">
                             <tr class="hover:bg-slate-50">
-                                <td class="p-3 font-bold text-slate-600" x-text="st.id"></td>
-                                <td class="p-3 font-semibold text-slate-800" x-text="st.name"></td>
-                                <td class="p-3">
-                                    <select x-model="st.trainer" class="border rounded px-2 py-1 text-xs bg-white">
-                                        <option value="Alexis León">Alexis León</option>
-                                        <option value="Colega Asignado">Colega Asignado</option>
-                                    </select>
-                                </td>
-                                <td class="p-3 text-slate-600" x-text="st.region"></td>
-                                <td class="p-3">
-                                    <span class="px-2 py-1 rounded text-xs font-bold"
+                                <td class="p-2 font-bold text-slate-600" x-text="st.id"></td>
+                                <td class="p-2 font-semibold text-slate-800" x-text="st.name"></td>
+                                <td class="p-2 text-slate-700" x-text="st.trainer"></td>
+                                <td class="p-2 text-slate-600" x-text="st.region"></td>
+                                <td class="p-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                                           :class="st.status === 'Visitada' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
                                           x-text="st.status"></span>
                                 </td>
@@ -164,93 +254,97 @@
             </div>
         </div>
 
-        <!-- VISTA 3: PROPUESTA PARA EL PRÓXIMO MES -->
-        <div x-show="activeTab === 'proposal'" class="bg-white rounded-xl shadow-sm p-6 space-y-6">
-            <div class="border-b pb-4">
-                <h2 class="text-lg font-bold text-slate-800">Motor de Propuesta Automática (Próximo Ciclo)</h2>
-                <p class="text-sm text-slate-500">Al concluir las 7 semanas, este módulo compila automáticamente las estaciones suspendidas y pendientes para priorizar la planificación mensual siguiente.</p>
-            </div>
-
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                <h3 class="font-bold text-slate-700 text-sm">Resumen de Estaciones Pendientes / Reajustadas para el Borrador:</h3>
-                <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
-                    <li><strong class="text-slate-800">Estación #71 (Channis)</strong> - Suspendida por clima en Semana 3 (Prioridad Alta)</li>
-                    <li><strong class="text-slate-800">Estación #22 (Zona Libre)</strong> - Reprogramada por mantenimiento (Prioridad Alta)</li>
-                    <li><strong class="text-slate-800">Estación #58 (Hacienda Santa Fe)</strong> - Pendiente de cierre de ciclo</li>
-                </ul>
-            </div>
-
-            <div class="flex justify-end">
-                <button @click="alert('¡Propuesta generada y exportada con éxito para el siguiente mes!')" class="puma-red text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow hover:opacity-95 transition">
-                    📥 Generar y Descargar Borrador del Mes Siguiente
-                </button>
-            </div>
-        </div>
-
     </main>
 
-    <!-- Script de Lógica con Alpine.js -->
+    <!-- Script de Datos y Lógica con Alpine.js -->
     <script>
         function pumaPlanner() {
             return {
                 activeTab: 'calendar',
                 currentTrainer: 'Alexis León',
+                selectedMonth: 'current', // 'prev', 'current', 'next'
                 searchQuery: '',
-                completedCount: 28,
-                suspendedCount: 3,
-                completionRate: 60.8,
-                
-                // Lista de muestra con las estaciones clave proporcionadas
+
+                // Nombres dinámicos de los meses
+                prevMonthLabel: 'Septiembre 2026',
+                currentMonthLabel: 'Octubre 2026',
+                nextMonthLabel: 'Noviembre 2026',
+
+                get trainerInitials() {
+                    return this.currentTrainer.split(' ').map(n => n[0]).join('');
+                },
+
+                get selectedMonthName() {
+                    if (this.selectedMonth === 'prev') return 'SEP';
+                    if (this.selectedMonth === 'current') return 'OCT';
+                    return 'NOV';
+                },
+
+                get selectedMonthLabel() {
+                    if (this.selectedMonth === 'prev') return this.prevMonthLabel;
+                    if (this.selectedMonth === 'current') return this.currentMonthLabel;
+                    return this.nextMonthLabel;
+                },
+
+                selectMonth(month) {
+                    this.selectedMonth = month;
+                },
+
+                // Estaciones base (92 Total)
                 stations: [
                     { id: 1, name: "Tumba Muerto", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
-                    { id: 2, name: "vía Bolívar", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
+                    { id: 2, name: "Vía Bolívar", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
                     { id: 3, name: "Centenial", trainer: "Alexis León", region: "Panamá Metro", status: "Visitada" },
                     { id: 4, name: "Autopista", trainer: "Alexis León", region: "Panamá Oeste", status: "Programada" },
-                    { id: 5, name: "Las Américas", trainer: "Alexis León", region: "Panamá Oeste", status: "Programada" },
+                    { id: 13, name: "Hato Montaña", trainer: "Alexis León", region: "Panamá Oeste", status: "Visitada" },
                     { id: 28, name: "Chorrera OdGo", trainer: "Alexis León", region: "Panamá Oeste", status: "Visitada" },
                     { id: 71, name: "Channis", trainer: "Alexis León", region: "Panamá Este", status: "Suspendida" },
                     { id: 72, name: "Hipódromo", trainer: "Alexis León", region: "Panamá Este", status: "Visitada" },
-                    { id: 89, name: "David Central", trainer: "Colega Asignado", region: "Chiriquí", status: "Programada" },
-                    { id: 90, name: "David Vía Aeropuerto", trainer: "Colega Asignado", region: "Chiriquí", status: "Programada" }
+                    { id: 89, name: "David Central", trainer: "Capacitador 2", region: "Chiriquí", status: "Programada" },
+                    { id: 90, name: "David Vía Aeropuerto", trainer: "Capacitador 2", region: "Chiriquí", status: "Programada" }
                 ],
 
-                // Días y visitas de ejemplo para el calendario semanal
-                weekDays: [
-                    {
-                        name: "LUNES", date: "12 Oct",
-                        visits: [
-                            { id: 101, stationName: "Administrativo", type: "OFICINA", status: "Completada" }
-                        ]
-                    },
-                    {
-                        name: "MARTES", date: "13 Oct",
-                        visits: [
-                            { id: 102, stationName: "13. Hato Montaña", type: "EVALUACIÓN", status: "Completada" },
-                            { id: 103, stationName: "28. Chorrera OdGo", type: "AUDITORÍA", status: "Completada" }
-                        ]
-                    },
-                    {
-                        name: "MIÉRCOLES", date: "14 Oct",
-                        visits: [
-                            { id: 104, stationName: "71. Channis", type: "EVALUACIÓN", status: "Suspendida" },
-                            { id: 105, stationName: "72. Hipódromo", type: "EVALUACIÓN", status: "Completada" }
-                        ]
-                    },
-                    {
-                        name: "JUEVES", date: "15 Oct",
-                        visits: [
-                            { id: 106, stationName: "17. Albrook", type: "AUDITORÍA", status: "Completada" },
-                            { id: 107, stationName: "71. Channis (Reajuste)", type: "EVALUACIÓN", status: "Programada" }
-                        ]
-                    },
-                    {
-                        name: "VIERNES", date: "16 Oct",
-                        visits: [
-                            { id: 108, stationName: "4. Autopista", type: "EVALUACIÓN", status: "Programada" },
-                            { id: 109, stationName: "5. Las Américas", type: "AUDITORÍA", status: "Programada" }
-                        ]
-                    }
-                ],
+                // Datos de la Agenda por Mes
+                monthData: {
+                    prev: [
+                        { name: "SEMANA 1 (SEP)", date: "01 - 05 Sep", visits: [{ id: 201, stationName: "1. Tumba Muerto", type: "AUDITORÍA", status: "Completada", note: "Sin hallazgos" }, { id: 202, stationName: "2. Vía Bolívar", type: "EVALUACIÓN", status: "Completada", note: "100% Personal uniformado" }] },
+                        { name: "SEMANA 2 (SEP)", date: "08 - 12 Sep", visits: [{ id: 203, stationName: "3. Centenial", type: "AUDITORÍA", status: "Completada", note: "Cierre exitoso" }] }
+                    ],
+                    current: [
+                        { name: "LUNES 12", date: "12 Oct", visits: [{ id: 101, stationName: "Administrativo", type: "OFICINA", status: "Completada", note: "Planificación mensual" }] },
+                        { name: "MARTES 13", date: "13 Oct", visits: [{ id: 102, stationName: "13. Hato Montaña", type: "EVALUACIÓN", status: "Completada", note: "Revisión de pista OK" }, { id: 103, stationName: "28. Chorrera OdGo", type: "AUDITORÍA", status: "Completada", note: "Turno mañana" }] },
+                        { name: "MIÉRCOLES 14", date: "14 Oct", visits: [{ id: 104, stationName: "71. Channis", type: "EVALUACIÓN", status: "Suspendida", note: "Lluvia torrencial" }, { id: 105, stationName: "72. Hipódromo", type: "EVALUACIÓN", status: "Completada", note: "Turno tarde" }] },
+                        { name: "JUEVES 15", date: "15 Oct", visits: [{ id: 106, stationName: "17. Albrook", type: "AUDITORÍA", status: "Completada", note: "Revisión de estándares" }, { id: 107, stationName: "71. Channis (Reajuste)", type: "EVALUACIÓN", status: "Programada", note: "Reinsertada por auto-reajuste" }] },
+                        { name: "VIERNES 16", date: "16 Oct", visits: [{ id: 108, stationName: "4. Autopista", type: "EVALUACIÓN", status: "Programada", note: "Pendiente" }] }
+                    ],
+                    next: [
+                        { name: "SEMANA 1 (NOV)", date: "02 - 06 Nov", visits: [{ id: 301, stationName: "71. Channis (Prioridad)", type: "EVALUACIÓN", status: "Programada", note: "Priorizada desde Octubre" }] },
+                        { name: "SEMANA 2 (NOV)", date: "09 - 13 Nov", visits: [{ id: 302, stationName: "89. David Central", type: "AUDITORÍA", status: "Programada", note: "Gira Chiriquí" }] }
+                    ]
+                },
+
+                getActiveMonthDays() {
+                    return this.monthData[this.selectedMonth] || [];
+                },
+
+                getMonthVisitsCount() {
+                    return this.getActiveMonthDays().reduce((acc, day) => acc + day.visits.length, 0);
+                },
+
+                getStats() {
+                    let visits = [];
+                    this.getActiveMonthDays().forEach(day => visits.push(...day.visits));
+                    let completed = visits.filter(v => v.status === 'Completada').length;
+                    let suspended = visits.filter(v => v.status === 'Suspendida').length;
+                    let pending = visits.filter(v => v.status === 'Programada').length;
+                    let total = visits.length || 1;
+                    return {
+                        completed,
+                        suspended,
+                        pending,
+                        rate: ((completed / total) * 100).toFixed(1)
+                    };
+                },
 
                 get filteredStations() {
                     if (!this.searchQuery) return this.stations;
@@ -262,15 +356,21 @@
 
                 setStatus(visit, newStatus) {
                     visit.status = newStatus;
-                    if(newStatus === 'Completada') {
-                        this.completedCount++;
-                    } else if(newStatus === 'Suspendida') {
-                        this.suspendedCount++;
+                },
+
+                addNote(visit) {
+                    let note = prompt("Agregar nota u observación para esta visita:", visit.note || "");
+                    if (note !== null) {
+                        visit.note = note;
                     }
                 },
 
                 runAutoReschedule() {
-                    alert('⚡ [Smart Scheduler]: El sistema analizó la agenda, detectó las estaciones suspendidas y las reubicó automáticamente en los espacios libres de la semana sin sobrecargar el límite diario.');
+                    alert('⚡ [Smart Scheduler]: El sistema analizó la agenda de ' + this.currentTrainer + ', detectó las visitas suspendidas de ' + this.selectedMonthLabel + ' y las reubicó automáticamente en los días libres sin colisionar rutas.');
+                },
+
+                exportMonthPDF() {
+                    window.print();
                 }
             }
         }
