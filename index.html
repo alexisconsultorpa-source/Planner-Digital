@@ -14,25 +14,48 @@
         .text-puma-red { color: #E30613; }
         .text-puma-green { color: #00875A; }
         
+        /* Configuración Estricta de Impresión / Exportación PDF en 1 Página Carta (8.5 x 11 pulg) */
+        @page {
+            size: letter portrait;
+            margin: 0.4in;
+        }
+
         @media print {
-            header, nav, .no-print {
+            header, nav, .no-print, button, input {
                 display: none !important;
             }
             body {
                 background-color: white !important;
                 color: black !important;
-                font-size: 11pt;
+                font-size: 8pt !important;
+                line-height: 1.1 !important;
             }
             .print-container {
                 width: 100% !important;
+                max-width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 border: none !important;
             }
+            /* Garantizar 1 página por mes */
+            .page-break-after {
+                break-after: page;
+                page-break-after: always;
+            }
             .card-print {
+                border: 1px solid #ddd !important;
+                padding: 4px !important;
+            }
+            .grid-print-calendar {
+                display: grid !important;
+                grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+                gap: 4px !important;
+            }
+            .day-card-print {
+                min-height: 75px !important;
+                padding: 3px !important;
                 border: 1px solid #ccc !important;
-                break-inside: avoid;
             }
         }
     </style>
@@ -88,7 +111,7 @@
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Planificación Multimes</span>
                     <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
-                    <p class="text-xs text-slate-500" x-text="'Mostrando agenda para: ' + selectedMonthLabel + ' (' + getTrainerVisits().length + ' visitas programadas)'"></p>
+                    <p class="text-xs text-slate-500" x-text="'Agenda mensual ajustada a 1 página (8.5x11 pulgadas) - ' + selectedMonthLabel"></p>
                 </div>
             </div>
 
@@ -125,7 +148,7 @@
                 </button>
 
                 <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition ml-2">
-                    <span>📄 PDF</span>
+                    <span>📄 Exportar PDF (1 pág 8.5x11)</span>
                 </button>
             </div>
 
@@ -133,25 +156,25 @@
 
         <!-- Tarjetas de Métricas -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
-                <h3 class="text-lg font-black text-slate-800 mt-0.5" x-text="currentTrainer"></h3>
-                <p class="text-xs text-slate-400" x-text="getTrainerStations().length + ' estaciones en su ruta'"></p>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Capacitador Asignado</p>
+                <h3 class="text-base font-black text-slate-800 mt-0.5" x-text="currentTrainer"></h3>
+                <p class="text-[10px] text-slate-400" x-text="getTrainerStations().length + ' estaciones en su ruta'"></p>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Visitas Programadas</p>
-                <h3 class="text-2xl font-black text-[#00875A] mt-0.5" x-text="getTrainerVisits().length">0</h3>
-                <p class="text-xs text-slate-400">En el mes activo (<span x-text="selectedMonthShortName"></span>)</p>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Visitas Programadas</p>
+                <h3 class="text-xl font-black text-[#00875A] mt-0.5" x-text="getTrainerVisits().length">0</h3>
+                <p class="text-[10px] text-slate-400">En el mes activo (<span x-text="selectedMonthShortName"></span>)</p>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#E30613] card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Canceladas / Incidencias</p>
-                <h3 class="text-2xl font-black text-[#E30613] mt-0.5" x-text="getCancelledVisitsCount()">0</h3>
-                <p class="text-xs text-slate-400">Control operativo</p>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-[#E30613] card-print">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Canceladas / Incidencias</p>
+                <h3 class="text-xl font-black text-[#E30613] mt-0.5" x-text="getCancelledVisitsCount()">0</h3>
+                <p class="text-[10px] text-slate-400">Control operativo</p>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Restricciones</p>
-                <h3 class="text-lg font-black text-blue-600 mt-0.5">Auto / Manual</h3>
-                <p class="text-xs text-slate-400">Máx 3 Auto (máx. 2 meses) | Máx 4 Manual</p>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Formato de Exportación</p>
+                <h3 class="text-base font-black text-blue-600 mt-0.5">PDF (8.5" x 11")</h3>
+                <p class="text-[10px] text-slate-400">1 Página por mes ajustada</p>
             </div>
         </div>
 
@@ -161,14 +184,14 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
-        <div x-show="activeTab === 'calendar'" class="space-y-6">
-            <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
+        <!-- VISTA 1: CALENDARIO INTERACTIVO (Formato 1 Página en PDF) -->
+        <div x-show="activeTab === 'calendar'" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800" x-text="'Calendario Operativo - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Haz clic en un día para programar una visita manual (hasta 4 por día). El generador automático programa 3 por día de martes a viernes para hasta 2 meses seleccionados.</p>
+                    <h3 class="text-base font-bold text-slate-800" x-text="'Reporte Mensual de Visitas - ' + selectedMonthLabel"></h3>
+                    <p class="text-xs text-slate-500">Capacitador: <span class="font-bold text-red-600" x-text="currentTrainer"></span> | Límite por día: Máx 3 Auto (máx 2 meses) / Máx 4 Manual</p>
                 </div>
-                <div class="flex items-center space-x-3 text-xs">
+                <div class="flex items-center space-x-3 text-xs no-print">
                     <span class="flex items-center"><span class="w-3 h-3 bg-white border border-slate-300 rounded-sm inline-block mr-1"></span> Día Hábil</span>
                     <span class="flex items-center"><span class="w-3 h-3 bg-amber-100 border border-amber-300 rounded-sm inline-block mr-1"></span> Sábado / Domingo</span>
                     <span class="flex items-center"><span class="w-3 h-3 bg-red-100 border border-red-300 rounded-sm inline-block mr-1"></span> Feriado</span>
@@ -176,10 +199,10 @@
             </div>
 
             <!-- Grilla del Calendario Mensual -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 grid-print-calendar">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
                     <div @click="openScheduleModalFromCalendar(dayObj)" 
-                         class="bg-white rounded-xl p-3 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between min-h-[140px]"
+                         class="bg-white rounded-xl p-2 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between day-card-print"
                          :class="{
                              'bg-amber-50/60 border-amber-200': dayObj.isWeekend,
                              'bg-red-50/60 border-red-200': dayObj.isHoliday,
@@ -187,8 +210,8 @@
                          }">
                         
                         <div class="flex justify-between items-center">
-                            <span class="text-xs font-black uppercase text-slate-500" x-text="dayObj.dayName"></span>
-                            <span class="text-sm font-black px-2 py-0.5 rounded-full"
+                            <span class="text-[10px] font-black uppercase text-slate-500" x-text="dayObj.dayName"></span>
+                            <span class="text-xs font-black px-1.5 py-0.2 rounded-full"
                                   :class="{
                                       'bg-amber-200 text-amber-900': dayObj.isWeekend,
                                       'bg-red-200 text-red-900': dayObj.isHoliday,
@@ -198,41 +221,38 @@
                         
                         <div>
                             <template x-if="dayObj.isHoliday">
-                                <span class="text-[9px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded">🎉 Feriado</span>
-                            </template>
-                            <template x-if="dayObj.isWeekend && !dayObj.isHoliday">
-                                <span class="text-[9px] bg-amber-600 text-white font-bold px-1.5 py-0.5 rounded">📅 Fin de Semana</span>
+                                <span class="text-[8px] bg-red-600 text-white font-bold px-1 rounded">🎉 Feriado</span>
                             </template>
                         </div>
 
                         <!-- Visitas Programadas en este Día -->
-                        <div class="space-y-1.5 my-2">
+                        <div class="space-y-1 my-1">
                             <template x-for="visit in getVisitsForDate(dayObj.dateStr)" :key="visit.id">
-                                <div class="p-1.5 rounded text-[11px] font-bold border flex flex-col space-y-1"
+                                <div class="p-1 rounded text-[9px] font-bold border flex flex-col"
                                      :class="{
                                          'bg-emerald-50 border-emerald-300 text-emerald-900': visit.status === 'Programada',
                                          'bg-red-50 border-red-300 text-red-900': visit.status === 'Cancelada'
                                      }">
                                     <div class="flex justify-between items-center">
-                                        <span x-text="visit.stationName"></span>
-                                        <span class="text-[9px] px-1 rounded text-white"
+                                        <span class="truncate" x-text="visit.stationName"></span>
+                                        <span class="text-[8px] px-0.5 rounded text-white"
                                               :class="visit.status === 'Programada' ? 'bg-[#00875A]' : 'bg-[#E30613]'"
-                                              x-text="visit.status"></span>
+                                              x-text="visit.status === 'Programada' ? 'OK' : 'X'"></span>
                                     </div>
-                                    <!-- Botones de Cancelar, Reprogramar y Eliminar -->
-                                    <div class="grid grid-cols-3 gap-1 pt-1 border-t border-slate-200 text-[9px] text-center no-print">
+                                    <!-- Botones de Acción (Ocultos al imprimir) -->
+                                    <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
                                         <button @click.stop="cancelVisit(visit)" class="text-amber-700 font-bold hover:underline">Cancelar</button>
-                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprogramar</button>
-                                        <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Eliminar</button>
+                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprog.</button>
+                                        <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="getVisitsForDate(dayObj.dateStr).length === 0">
-                                <p class="text-[10px] text-slate-400 italic text-center py-2">En blanco</p>
+                                <p class="text-[9px] text-slate-300 italic text-center py-1">Libre</p>
                             </template>
                         </div>
 
-                        <div class="text-[10px] text-center text-slate-400 font-semibold no-print">+ Agregar</div>
+                        <div class="text-[9px] text-center text-slate-400 font-semibold no-print">+ Agregar</div>
                     </div>
                 </template>
             </div>
