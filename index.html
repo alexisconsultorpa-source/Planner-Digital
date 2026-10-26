@@ -38,7 +38,6 @@
                 box-shadow: none !important;
                 border: none !important;
             }
-            /* Garantizar 1 página por mes */
             .page-break-after {
                 break-after: page;
                 page-break-after: always;
@@ -154,27 +153,17 @@
 
         </div>
 
-        <!-- Tarjetas de Métricas -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
-                <p class="text-[10px] font-bold text-slate-500 uppercase">Capacitador Asignado</p>
-                <h3 class="text-base font-black text-slate-800 mt-0.5" x-text="currentTrainer"></h3>
-                <p class="text-[10px] text-slate-400" x-text="getTrainerStations().length + ' estaciones en su ruta'"></p>
+        <!-- Tarjetas de Métricas (Solo 2 recuadros: Capacitador Asignado y Visitas Programadas) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
+                <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
+                <h3 class="text-lg font-black text-slate-800 mt-0.5" x-text="currentTrainer"></h3>
+                <p class="text-xs text-slate-400 mt-1" x-text="getTrainerStations().length + ' estaciones en su ruta'"></p>
             </div>
-            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
-                <p class="text-[10px] font-bold text-slate-500 uppercase">Visitas Programadas</p>
-                <h3 class="text-xl font-black text-[#00875A] mt-0.5" x-text="getTrainerVisits().length">0</h3>
-                <p class="text-[10px] text-slate-400">En el mes activo (<span x-text="selectedMonthShortName"></span>)</p>
-            </div>
-            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-[#E30613] card-print">
-                <p class="text-[10px] font-bold text-slate-500 uppercase">Canceladas / Incidencias</p>
-                <h3 class="text-xl font-black text-[#E30613] mt-0.5" x-text="getCancelledVisitsCount()">0</h3>
-                <p class="text-[10px] text-slate-400">Control operativo</p>
-            </div>
-            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
-                <p class="text-[10px] font-bold text-slate-500 uppercase">Formato de Exportación</p>
-                <h3 class="text-base font-black text-blue-600 mt-0.5">PDF (8.5" x 11")</h3>
-                <p class="text-[10px] text-slate-400">1 Página por mes ajustada</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
+                <p class="text-xs font-bold text-slate-500 uppercase">Visitas Programadas</p>
+                <h3 class="text-2xl font-black text-[#00875A] mt-0.5" x-text="getTrainerVisits().length">0</h3>
+                <p class="text-xs text-slate-400 mt-1">En el mes activo (<span x-text="selectedMonthShortName"></span>)</p>
             </div>
         </div>
 
@@ -184,7 +173,7 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO (Formato 1 Página en PDF) -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
         <div x-show="activeTab === 'calendar'" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
@@ -228,20 +217,13 @@
                         <!-- Visitas Programadas en este Día -->
                         <div class="space-y-1 my-1">
                             <template x-for="visit in getVisitsForDate(dayObj.dateStr)" :key="visit.id">
-                                <div class="p-1 rounded text-[9px] font-bold border flex flex-col"
-                                     :class="{
-                                         'bg-emerald-50 border-emerald-300 text-emerald-900': visit.status === 'Programada',
-                                         'bg-red-50 border-red-300 text-red-900': visit.status === 'Cancelada'
-                                     }">
+                                <div class="p-1 rounded text-[9px] font-bold border flex flex-col bg-emerald-50 border-emerald-300 text-emerald-900">
                                     <div class="flex justify-between items-center">
                                         <span class="truncate" x-text="visit.stationName"></span>
-                                        <span class="text-[8px] px-0.5 rounded text-white"
-                                              :class="visit.status === 'Programada' ? 'bg-[#00875A]' : 'bg-[#E30613]'"
-                                              x-text="visit.status === 'Programada' ? 'OK' : 'X'"></span>
+                                        <span class="text-[8px] px-0.5 rounded text-white bg-[#00875A]">OK</span>
                                     </div>
                                     <!-- Botones de Acción (Ocultos al imprimir) -->
-                                    <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
-                                        <button @click.stop="cancelVisit(visit)" class="text-amber-700 font-bold hover:underline">Cancelar</button>
+                                    <div class="grid grid-cols-2 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
                                         <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprog.</button>
                                         <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
                                     </div>
@@ -310,7 +292,7 @@
 
     </main>
 
-    <!-- MODAL 1: SELECCIÓN DE MESES PARA ORDEN AUTOMÁTICO (MÁXIMO 2 MESES) -->
+    <!-- MODAL 1: SELECCIÓN DE MESES PARA ORDEN AUTOMÁTICO -->
     <div x-show="showAutoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -422,7 +404,7 @@
         </div>
     </div>
 
-    <!-- Script con Selección de Meses para Generador Automático (Máx 2 Meses) -->
+    <!-- Script de la aplicación -->
     <script>
         function pumaPlanner() {
             return {
@@ -442,7 +424,6 @@
                 modalActivityType: 'Auditoría',
                 selectedAutoMonths: ['current', 'p1'],
 
-                // Configuración de los 5 meses (2 antes, actual, 2 después)
                 monthsConfig: {
                     'm-2': { name: 'AGO', label: 'Agosto 2026', prefix: '2026-08', days: 31 },
                     'm-1': { name: 'SEP', label: 'Septiembre 2026', prefix: '2026-09', days: 30 },
@@ -603,10 +584,6 @@
                 getTrainerVisits() {
                     let monthVisits = this.visits[this.selectedMonth] || [];
                     return monthVisits.filter(v => v.trainer === this.currentTrainer);
-                },
-
-                getCancelledVisitsCount() {
-                    return this.getTrainerVisits().filter(v => v.status === 'Cancelada').length;
                 },
 
                 getMonthCalendarDays() {
@@ -823,14 +800,8 @@
                     alert(`¡Orden automático generado con éxito! Se programaron ${assignedCount} visitas para ${this.currentTrainer} en (${selectedLabels}) [máx. 3 por día, martes a viernes, sin feriados].`);
                 },
 
-                cancelVisit(visit) {
-                    if (confirm(`¿Desea cancelar la visita a ${visit.stationName}?`)) {
-                        visit.status = 'Cancelada';
-                    }
-                },
-
                 deleteVisit(visit) {
-                    if (confirm(`¿Está seguro de eliminar por completo la programación de ${visit.stationName}?`)) {
+                    if (confirm(`¿Está seguro de eliminar la programación de ${visit.stationName}?`)) {
                         Object.keys(this.visits).forEach(mKey => {
                             if (this.visits[mKey]) {
                                 let idx = this.visits[mKey].findIndex(v => v.id === visit.id);
