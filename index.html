@@ -48,8 +48,8 @@
                     PUMA
                 </div>
                 <div>
-                    <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR BIMENSUAL DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo</p>
+                    <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR OPERATIVO DE CAPACITACIONES</h1>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo (5 Meses)</p>
                 </div>
             </div>
 
@@ -77,43 +77,55 @@
     <!-- Contenedor Principal -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 print-container">
 
-        <!-- Banner de Perfil y Selector de Meses -->
+        <!-- Banner de Perfil y Selector Navegable de 5 Meses -->
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4">
             
             <div class="flex items-center space-x-3">
                 <div class="p-3 puma-red text-white rounded-xl font-bold text-center min-w-[70px]">
                     <span class="text-xs block uppercase">Mes</span>
-                    <span class="text-lg font-black uppercase" x-text="selectedMonthName">OCT</span>
+                    <span class="text-lg font-black uppercase" x-text="selectedMonthShortName">OCT</span>
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Plan Operativo Bimensual</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Planificación Multimes</span>
                     <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
                     <p class="text-xs text-slate-500" x-text="'Mostrando agenda para: ' + selectedMonthLabel + ' (' + getTrainerVisits().length + ' visitas programadas)'"></p>
                 </div>
             </div>
 
-            <!-- Navegador de Meses y Exportación PDF -->
-            <div class="flex flex-wrap items-center gap-2 no-print">
-                <button @click="selectMonth('prev')" 
-                        :class="selectedMonth === 'prev' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <span>⬅ Septiembre</span>
+            <!-- Navegador de 5 Meses (2 antes, actual, 2 después) + Exportación PDF -->
+            <div class="flex flex-wrap items-center justify-center gap-1.5 no-print">
+                <button @click="selectMonth('m-2')" 
+                        :class="selectedMonth === 'm-2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                    <span>Agosto</span>
+                </button>
+
+                <button @click="selectMonth('m-1')" 
+                        :class="selectedMonth === 'm-1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                    <span>Septiembre</span>
                 </button>
 
                 <button @click="selectMonth('current')" 
-                        :class="selectedMonth === 'current' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
+                        :class="selectedMonth === 'current' ? 'puma-red text-white shadow ring-2 ring-red-400' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-black transition">
                     <span>📌 Octubre (Actual)</span>
                 </button>
 
-                <button @click="selectMonth('next')" 
-                        :class="selectedMonth === 'next' ? 'puma-red text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-2 rounded-lg text-xs font-bold transition">
-                    <span>Noviembre ➡</span>
+                <button @click="selectMonth('p1')" 
+                        :class="selectedMonth === 'p1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                    <span>Noviembre</span>
                 </button>
 
-                <button @click="exportMonthPDF()" class="puma-green text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
-                    <span>📄 Exportar PDF del Mes</span>
+                <button @click="selectMonth('p2')" 
+                        :class="selectedMonth === 'p2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                    <span>Diciembre</span>
+                </button>
+
+                <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition ml-2">
+                    <span>📄 PDF</span>
                 </button>
             </div>
 
@@ -129,17 +141,17 @@
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#00875A] card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Visitas Programadas</p>
                 <h3 class="text-2xl font-black text-[#00875A] mt-0.5" x-text="getTrainerVisits().length">0</h3>
-                <p class="text-xs text-slate-400">En el mes activo</p>
+                <p class="text-xs text-slate-400">En el mes activo (<span x-text="selectedMonthShortName"></span>)</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-[#E30613] card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Canceladas / Reprogramadas</p>
+                <p class="text-xs font-bold text-slate-500 uppercase">Canceladas / Incidencias</p>
                 <h3 class="text-2xl font-black text-[#E30613] mt-0.5" x-text="getCancelledVisitsCount()">0</h3>
-                <p class="text-xs text-slate-400">Control de incidencias</p>
+                <p class="text-xs text-slate-400">Control operativo</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 card-print">
-                <p class="text-xs font-bold text-slate-500 uppercase">Estado General</p>
-                <h3 class="text-lg font-black text-blue-600 mt-0.5">Automático / Manual</h3>
-                <p class="text-xs text-slate-400">Máx 3 auto / Máx 4 manual</p>
+                <p class="text-xs font-bold text-slate-500 uppercase">Restricciones</p>
+                <h3 class="text-lg font-black text-blue-600 mt-0.5">Auto / Manual</h3>
+                <p class="text-xs text-slate-400">Máx 3 Auto | Máx 4 Manual</p>
             </div>
         </div>
 
@@ -154,7 +166,7 @@
             <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Calendario Operativo - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Visualiza los días del mes. Máximo 3 estaciones por día (Automático) o hasta 4 (Manual). Fines de semana y feriados señalizados.</p>
+                    <p class="text-xs text-slate-500">Haz clic en un día para programar una visita manual (hasta 4 por día). El generador automático programa 3 por día de martes a viernes en mes actual y siguiente.</p>
                 </div>
                 <div class="flex items-center space-x-3 text-xs">
                     <span class="flex items-center"><span class="w-3 h-3 bg-white border border-slate-300 rounded-sm inline-block mr-1"></span> Día Hábil</span>
@@ -231,7 +243,7 @@
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Puedes programar de forma individual o usar el Generador Automático (cubre el mes actual y siguiente, Martes a Viernes, sin feriados, máx. 3 por día).</p>
+                    <p class="text-xs text-slate-500">Puedes programar de forma individual o generar la orden automática (mes actual y siguiente, Martes a Viernes, sin feriados, máx. 3 por día).</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
                     <button @click="generateAutomaticSchedule()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition flex items-center space-x-2">
@@ -346,7 +358,7 @@
         </div>
     </div>
 
-    <!-- Script con Lógica Bimensual, Restricciones y Generador Automático -->
+    <!-- Script con Navegación de 5 Meses y Generador Automático -->
     <script>
         function pumaPlanner() {
             return {
@@ -364,24 +376,25 @@
                 modalSelectedStationId: '',
                 modalActivityType: 'Auditoría',
 
-                prevMonthLabel: 'Septiembre 2026',
-                currentMonthLabel: 'Octubre 2026',
-                nextMonthLabel: 'Noviembre 2026',
+                // Configuración de los 5 meses (2 antes, actual, 2 después)
+                monthsConfig: {
+                    'm-2': { name: 'AGO', label: 'Agosto 2026', prefix: '2026-08', days: 31 },
+                    'm-1': { name: 'SEP', label: 'Septiembre 2026', prefix: '2026-09', days: 30 },
+                    'current': { name: 'OCT', label: 'Octubre 2026', prefix: '2026-10', days: 31 },
+                    'p1': { name: 'NOV', label: 'Noviembre 2026', prefix: '2026-11', days: 30 },
+                    'p2': { name: 'DIC', label: 'Diciembre 2026', prefix: '2026-12', days: 31 }
+                },
 
                 get trainerInitials() {
                     return this.currentTrainer.split(' ').map(n => n[0]).join('');
                 },
 
-                get selectedMonthName() {
-                    if (this.selectedMonth === 'prev') return 'SEP';
-                    if (this.selectedMonth === 'current') return 'OCT';
-                    return 'NOV';
+                get selectedMonthShortName() {
+                    return this.monthsConfig[this.selectedMonth]?.name || 'OCT';
                 },
 
                 get selectedMonthLabel() {
-                    if (this.selectedMonth === 'prev') return this.prevMonthLabel;
-                    if (this.selectedMonth === 'current') return this.currentMonthLabel;
-                    return this.nextMonthLabel;
+                    return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026';
                 },
 
                 get calendarModalTitle() {
@@ -400,8 +413,8 @@
                     }
                 },
 
-                selectMonth(month) {
-                    this.selectedMonth = month;
+                selectMonth(monthKey) {
+                    this.selectedMonth = monthKey;
                 },
 
                 stations: [
@@ -502,9 +515,11 @@
                 ],
 
                 visits: {
-                    prev: [],
-                    current: [],
-                    next: []
+                    'm-2': [],
+                    'm-1': [],
+                    'current': [],
+                    'p1': [],
+                    'p2': []
                 },
 
                 getTrainerStations() {
@@ -529,19 +544,14 @@
                 },
 
                 getMonthCalendarDays() {
-                    let daysCount = 31;
-                    if (this.selectedMonth === 'prev') { daysCount = 30; }
-                    if (this.selectedMonth === 'next') { daysCount = 30; }
-
+                    let currentCfg = this.monthsConfig[this.selectedMonth] || this.monthsConfig['current'];
                     let list = [];
                     let weekdays = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
                     let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
 
-                    for (let i = 1; i <= daysCount; i++) {
+                    for (let i = 1; i <= currentCfg.days; i++) {
                         let dayNumStr = i < 10 ? '0' + i : '' + i;
-                        let dateStr = `2026-10-${dayNumStr}`;
-                        if (this.selectedMonth === 'prev') dateStr = `2026-09-${dayNumStr}`;
-                        if (this.selectedMonth === 'next') dateStr = `2026-11-${dayNumStr}`;
+                        let dateStr = `${currentCfg.prefix}-${dayNumStr}`;
 
                         let d = new Date(dateStr + 'T00:00:00');
                         let dayOfWeek = d.getDay();
@@ -590,9 +600,7 @@
                         if (!this.activeStationToSchedule) return;
                         let st = this.activeStationToSchedule;
 
-                        let targetMonthKey = 'current';
-                        if (dateStr.startsWith('2026-09')) targetMonthKey = 'prev';
-                        if (dateStr.startsWith('2026-11')) targetMonthKey = 'next';
+                        let targetMonthKey = this.selectedMonth;
 
                         let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === dateStr && v.trainer === st.trainer);
                         if (existingOnDate.length >= 4) {
@@ -634,9 +642,7 @@
                     let st = this.stations.find(s => s.id == this.modalSelectedStationId);
                     if (!st) return;
 
-                    let targetMonthKey = 'current';
-                    if (this.modalDateStr.startsWith('2026-09')) targetMonthKey = 'prev';
-                    if (this.modalDateStr.startsWith('2026-11')) targetMonthKey = 'next';
+                    let targetMonthKey = this.selectedMonth;
 
                     let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === this.modalDateStr && v.trainer === this.currentTrainer);
                     if (existingOnDate.length >= 4) {
@@ -661,7 +667,7 @@
                 },
 
                 generateAutomaticSchedule() {
-                    if (!confirm(`¿Desea generar el orden automático de visitas (Mes actual y Siguiente) para ${this.currentTrainer}? Esto asignará hasta 3 estaciones por día (martes a viernes, sin feriados).`)) {
+                    if (!confirm(`¿Desea generar el orden automático de visitas (Mes actual y Siguiente) para ${this.currentTrainer}? Esto asignará solo sus estaciones asignadas, hasta 3 por día (martes a viernes, sin feriados).`)) {
                         return;
                     }
 
@@ -672,8 +678,8 @@
                     }
 
                     let monthsToProcess = [
-                        { key: 'current', daysCount: 31, prefix: '2026-10' },
-                        { key: 'next', daysCount: 30, prefix: '2026-11' }
+                        { key: 'current', cfg: this.monthsConfig['current'] },
+                        { key: 'p1', cfg: this.monthsConfig['p1'] }
                     ];
 
                     let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
@@ -682,9 +688,9 @@
 
                     for (let m of monthsToProcess) {
                         let validDays = [];
-                        for (let i = 1; i <= m.daysCount; i++) {
+                        for (let i = 1; i <= m.cfg.days; i++) {
                             let dayNumStr = i < 10 ? '0' + i : '' + i;
-                            let dateStr = `${m.prefix}-${dayNumStr}`;
+                            let dateStr = `${m.cfg.prefix}-${dayNumStr}`;
                             let d = new Date(dateStr + 'T00:00:00');
                             let dow = d.getDay();
 
@@ -722,7 +728,7 @@
                         }
                     }
 
-                    alert(`¡Orden automático generado con éxito! Se programaron ${assignedCount} visitas bimensuales (máx. 3 por día, martes a viernes, sin feriados) para ${this.currentTrainer}.`);
+                    alert(`¡Orden automático generado con éxito! Se programaron ${assignedCount} visitas para ${this.currentTrainer} (Mes actual y Siguiente, máx. 3 por día, martes a viernes, sin feriados).`);
                 },
 
                 cancelVisit(visit) {
@@ -733,7 +739,7 @@
 
                 deleteVisit(visit) {
                     if (confirm(`¿Está seguro de eliminar por completo la programación de ${visit.stationName}?`)) {
-                        ['prev', 'current', 'next'].forEach(mKey => {
+                        Object.keys(this.visits).forEach(mKey => {
                             if (this.visits[mKey]) {
                                 let idx = this.visits[mKey].findIndex(v => v.id === visit.id);
                                 if (idx !== -1) {
