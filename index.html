@@ -110,11 +110,11 @@
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Planificación Multimes</span>
                     <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
-                    <p class="text-xs text-slate-500" x-text="'Agenda Mensual Programada - ' + selectedMonthLabel"></p>
+                    <p class="text-xs text-slate-500" x-text="'Agenda mensual ajustada a 1 página (8.5x11 pulgadas) - ' + selectedMonthLabel"></p>
                 </div>
             </div>
 
-            <!-- Navegador de 5 Meses (2 antes, actual, 2 después) + Exportación PDF -->
+            <!-- Navegador de 5 Meses + Botones de Exportación / Google Calendar -->
             <div class="flex flex-wrap items-center justify-center gap-1.5 no-print">
                 <button @click="selectMonth('m-2')" 
                         :class="selectedMonth === 'm-2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
@@ -146,14 +146,19 @@
                     <span>Diciembre</span>
                 </button>
 
-                <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition ml-2">
-                    <span>📄 Exportar PDF </span>
+                <!-- Botón de Sincronización con Google Calendar (.ICS) -->
+                <button @click="exportToGoogleCalendarICS()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-blue-700 transition ml-2 flex items-center space-x-1 cursor-pointer">
+                    <span>📅 Exportar a Google Calendar (.ics)</span>
+                </button>
+
+                <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
+                    <span>📄 PDF (1 pág 8.5x11)</span>
                 </button>
             </div>
 
         </div>
 
-        <!-- Tarjetas de Métricas (Solo 2 recuadros: Capacitador Asignado y Visitas Programadas) -->
+        <!-- Tarjetas de Métricas (Solo 2 recuadros) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
@@ -178,7 +183,7 @@
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Reporte Mensual de Visitas - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Capacitador: <span class="font-bold text-red-600" x-text="currentTrainer"></span> |Visitas Programadas </p>
+                    <p class="text-xs text-slate-500">Capacitador: <span class="font-bold text-red-600" x-text="currentTrainer"></span> | Límite por día: Máx 3 Auto (máx 2 meses) / Máx 4 Manual</p>
                 </div>
                 <div class="flex items-center space-x-3 text-xs no-print">
                     <span class="flex items-center"><span class="w-3 h-3 bg-white border border-slate-300 rounded-sm inline-block mr-1"></span> Día Hábil</span>
@@ -222,9 +227,10 @@
                                         <span class="truncate" x-text="visit.stationName"></span>
                                         <span class="text-[8px] px-0.5 rounded text-white bg-[#00875A]">OK</span>
                                     </div>
-                                    <!-- Botones de Acción (Ocultos al imprimir) -->
-                                    <div class="grid grid-cols-2 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
-                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-blue-700 font-bold hover:underline">Reprog.</button>
+                                    <!-- Botones de Acción e Integración directa con Google Calendar -->
+                                    <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
+                                        <button @click.stop="openSingleGoogleCalendarLink(visit)" class="text-blue-700 font-bold hover:underline" title="Agregar a Google Calendar">📅 GCal</button>
+                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-slate-700 font-bold hover:underline">Reprog.</button>
                                         <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
                                     </div>
                                 </div>
@@ -404,7 +410,7 @@
         </div>
     </div>
 
-    <!-- Script de la aplicación -->
+    <!-- Script de la aplicación con Funciones de Integración a Google Calendar -->
     <script>
         function pumaPlanner() {
             return {
@@ -811,6 +817,61 @@
                             }
                         });
                     }
+                },
+
+                // EXPORTACIÓN A GOOGLE CALENDAR (Archivo .ics descargable para sincronizar todo el mes)
+                exportToGoogleCalendarICS() {
+                    let activeVisits = this.getTrainerVisits();
+                    if (activeVisits.length === 0) {
+                        alert("No hay visitas programadas en el mes activo para exportar a Google Calendar.");
+                        return;
+                    }
+
+                    let icsLines = [
+                        "BEGIN:VCALENDAR",
+                        "VERSION:2.0",
+                        "PRODID:-//Puma Energy Panama//Planificador Operativo//ES",
+                        "CALSCALE:GREGORIAN",
+                        "METHOD:PUBLISH"
+                    ];
+
+                    activeVisits.forEach(v => {
+                        let cleanDate = v.dateStr.replace(/-/g, "");
+                        let title = `Visita Puma: ${v.stationName} (${v.type})`;
+                        let description = `Visita operativa y capacitación asignada a ${v.trainer}. Tipo: ${v.type}.`;
+                        
+                        icsLines.push("BEGIN:VEVENT");
+                        icsLines.push(`SUMMARY:${title}`);
+                        icsLines.push(`DESCRIPTION:${description}`);
+                        icsLines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
+                        icsLines.push(`DTEND;VALUE=DATE:${cleanDate}`);
+                        icsLines.push("STATUS:CONFIRMED");
+                        icsLines.push("END:VEVENT");
+                    });
+
+                    icsLines.push("END:VCALENDAR");
+
+                    let icsContent = icsLines.join("\r\n");
+                    let blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+                    let link = document.createElement("a");
+                    link.href = window.URL.createObjectURL(blob);
+                    link.setAttribute("download", `Visitas_Puma_${this.currentTrainer.replace(/ /g, "_")}_${this.selectedMonthShortName}.ics`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    alert("¡Archivo .ics generado exitosamente! Al abrirlo se importará automáticamente en Google Calendar.");
+                },
+
+                // ENLACE DIRECTO INDIVIDUAL A GOOGLE CALENDAR
+                openSingleGoogleCalendarLink(visit) {
+                    let dateClean = visit.dateStr.replace(/-/g, "");
+                    let title = encodeURIComponent(`Visita Puma: ${visit.stationName}`);
+                    let details = encodeURIComponent(`Capacitador: ${visit.trainer}\nTipo de actividad: ${visit.type}`);
+                    let location = encodeURIComponent(`Estación Puma Energy ${visit.stationName}`);
+                    
+                    let gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateClean}/${dateClean}&details=${details}&location=${location}`;
+                    window.open(gCalUrl, '_blank');
                 },
 
                 exportMonthPDF() {
