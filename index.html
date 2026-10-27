@@ -64,18 +64,16 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR OPERATIVO DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo</p>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, Estaciones y Calendario Interactivo</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
-                <!-- Indicador de Modo de Acceso -->
                 <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl flex items-center space-x-2 border border-white/20 text-xs">
-                    <span x-text="isUnlocked ? '🔓 Modo Edición (Capacitador)' : '🔒'" :class="isUnlocked ? 'text-emerald-300 font-bold' : 'text-amber-200'"></span>
+                    <span x-text="isUnlocked ? '🔓 Modo Edición (Capacitador)' : '🔒 Modo Solo Lectura (Público)'" :class="isUnlocked ? 'text-emerald-300 font-bold' : 'text-amber-200'"></span>
                     <button @click="toggleAuth()" class="bg-white text-slate-900 px-2.5 py-1 rounded font-bold text-[11px] shadow hover:bg-slate-100 transition cursor-pointer" x-text="isUnlocked ? 'Bloquear' : '🔑 Acceso Capacitador'"></button>
                 </div>
 
-                <!-- Selector de Capacitador Activo -->
                 <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl flex items-center space-x-3 border border-white/20">
                     <div class="w-8 h-8 rounded-full bg-white text-[#E30613] font-black flex items-center justify-center text-xs shadow">
                         <span x-text="trainerInitials">AL</span>
@@ -152,7 +150,7 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO CON NOTAS -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
         <div x-show="activeTab === 'calendar'" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
@@ -222,14 +220,18 @@
             </div>
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE ESTACIONES Y GENERADOR AUTOMÁTICO -->
+        <!-- VISTA 2: DIRECTORIO DE ESTACIONES Y NUEVA ESTACIÓN -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Programación individual o automática.</p>
+                    <p class="text-xs text-slate-500">Programación individual, automática o adición de nuevas estaciones.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
+                    <!-- Botón para Agregar Nueva Estación (Solo Capacitadores) -->
+                    <button x-show="isUnlocked" @click="openAddStationModal()" class="puma-green text-white px-3 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer flex items-center space-x-1">
+                        <span>➕ Nueva Estación</span>
+                    </button>
                     <button x-show="isUnlocked" @click="openAutoGeneratorModal()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer">
                         <span>⚡ Generar Orden Automático</span>
                     </button>
@@ -254,7 +256,7 @@
                                 <td class="p-2.5 font-bold text-slate-600" x-text="st.id"></td>
                                 <td class="p-2.5 font-semibold text-slate-800" x-text="st.name"></td>
                                 <td class="p-2.5">
-                                    <select x-model="st.trainer" :disabled="!isUnlocked" class="border rounded px-2 py-1 text-xs bg-white font-medium disabled:bg-slate-100">
+                                    <select x-model="st.trainer" :disabled="!isUnlocked" @change="updateStationTrainer(st)" class="border rounded px-2 py-1 text-xs bg-white font-medium disabled:bg-slate-100">
                                         <option value="Alexis León">Alexis León</option>
                                         <option value="Gabriel Vergara">Gabriel Vergara</option>
                                     </select>
@@ -274,6 +276,40 @@
 
     </main>
 
+    <!-- MODAL: AGREGAR NUEVA ESTACIÓN -->
+    <div x-show="showAddStationModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-bold text-slate-800">Agregar Nueva Estación</h3>
+                <button @click="showAddStationModal = false" class="text-slate-400 font-bold text-lg">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Nombre de la Estación:</label>
+                    <input type="text" x-model="newStationName" placeholder="Ej. Estación Sur" class="w-full border rounded-lg px-3 py-2 text-xs outline-none focus:border-red-600">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Región:</label>
+                    <select x-model="newStationRegion" class="w-full border rounded-lg px-2 py-2 text-xs bg-white">
+                        <option value="Panamá / Otras">Panamá / Otras</option>
+                        <option value="Chiriquí">Chiriquí</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Capacitador Asignado:</label>
+                    <select x-model="newStationTrainer" class="w-full border rounded-lg px-2 py-2 text-xs bg-white">
+                        <option value="Alexis León">Alexis León</option>
+                        <option value="Gabriel Vergara">Gabriel Vergara</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3 border-t">
+                <button @click="showAddStationModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cancelar</button>
+                <button @click="saveNewStation()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow">Guardar Estación</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CONTRASEÑA PARA ACCESO DE CAPACITADOR -->
     <div x-show="showAuthModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
@@ -290,7 +326,7 @@
         </div>
     </div>
 
-    <!-- Modales de Operación (Solo accesibles si está desbloqueado) -->
+    <!-- Modales de Operación -->
     <div x-show="showAutoModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -366,7 +402,7 @@
         </div>
     </div>
 
-    <!-- Script con Supabase Cloud Sync y Seguridad -->
+    <!-- Script Principal con Supabase -->
     <script>
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
@@ -379,15 +415,20 @@
                 selectedMonth: 'current',
                 searchQuery: '',
                 
-                // Seguridad / Control de Acceso
                 isUnlocked: false,
                 showAuthModal: false,
                 authPinInput: '',
-                adminPin: '1985', // Puedes cambiar este PIN de acceso cuando desees
+                adminPin: '1985',
 
                 showModal: false,
                 showCalendarModal: false,
                 showAutoModal: false,
+                showAddStationModal: false,
+                
+                newStationName: '',
+                newStationRegion: 'Panamá / Otras',
+                newStationTrainer: 'Alexis León',
+
                 calendarMode: 'schedule',
                 activeStationToSchedule: null,
                 activeVisitToReprogram: null,
@@ -405,6 +446,7 @@
                 },
 
                 async init() {
+                    await this.loadStationsFromSupabase();
                     await this.loadVisitsFromSupabase();
                     await this.loadDayNotesFromSupabase();
                 },
@@ -415,7 +457,7 @@
                 toggleAuth() {
                     if (this.isUnlocked) {
                         this.isUnlocked = false;
-                        alert("Has salido del modo de edición. La aplicación quedó bloqueada en modo lectura.");
+                        alert("Has salido del modo de edición. Aplicación bloqueada en modo lectura.");
                     } else {
                         this.authPinInput = '';
                         this.showAuthModal = true;
@@ -426,69 +468,11 @@
                     if (this.authPinInput === this.adminPin) {
                         this.isUnlocked = true;
                         this.showAuthModal = false;
-                        alert("¡Acceso concedido! Ahora puedes editar la planeación y registrar notas.");
+                        alert("¡Acceso concedido! Edición y gestión habilitadas.");
                     } else {
-                        alert("PIN incorrecto. Acceso denegado.");
+                        alert("PIN incorrecto.");
                     }
                 },
-
-                async loadVisitsFromSupabase() {
-                    let { data, error } = await supabaseClient.from('visits').select('*');
-                    if (error) return;
-                    let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
-                    data.forEach(item => {
-                        let prefix = item.date_str.substring(0, 7);
-                        let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
-                        if (mKey) {
-                            tempVisits[mKey].push({
-                                id: item.id,
-                                dateStr: item.date_str,
-                                trainer: item.trainer,
-                                stationName: item.station_name,
-                                type: item.type,
-                                status: item.status
-                            });
-                        }
-                    });
-                    this.visits = tempVisits;
-                },
-
-                async loadDayNotesFromSupabase() {
-                    let { data, error } = await supabaseClient.from('day_notes').select('*');
-                    if (error) return;
-                    let notesMap = {};
-                    if (data) {
-                        data.forEach(n => {
-                            notesMap[n.date_str] = n.comment;
-                        });
-                    }
-                    this.dayNotes = notesMap;
-                },
-
-                getDayComment(dateStr) {
-                    return this.dayNotes[dateStr] || '';
-                },
-
-                async saveDayComment(dateStr, commentText) {
-                    if (!this.isUnlocked) return;
-                    this.dayNotes[dateStr] = commentText;
-                    let { error } = await supabaseClient.from('day_notes').upsert({
-                        date_str: dateStr,
-                        comment: commentText,
-                        trainer: this.currentTrainer
-                    }, { onConflict: 'date_str' });
-
-                    if (error) {
-                        console.error("Error guardando nota:", error.message);
-                    }
-                },
-
-                get trainerInitials() { return this.currentTrainer.split(' ').map(n => n[0]).join(''); },
-                get selectedMonthShortName() { return this.monthsConfig[this.selectedMonth]?.name || 'OCT'; },
-                get selectedMonthLabel() { return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026'; },
-                get calendarModalTitle() { return this.calendarMode === 'schedule' ? 'Programar Estación' : 'Reprogramar Visita'; },
-                get calendarModalSubtitle() { return 'Selecciona el día en el calendario'; },
-                selectMonth(m) { this.selectedMonth = m; },
 
                 stations: [
                     { id: 1, name: "4 Altos", region: "Panamá / Otras", trainer: "Alexis León" },
@@ -586,6 +570,116 @@
                     { id: 93, name: "Volcán", region: "Chiriquí", trainer: "Gabriel Vergara" },
                     { id: 94, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" }
                 ],
+
+                async loadStationsFromSupabase() {
+                    let { data, error } = await supabaseClient.from('stations').select('*');
+                    if (!error && data && data.length > 0) {
+                        // Combinamos las bases o usamos las de Supabase si ya hay personalizadas
+                        let existingIds = this.stations.map(s => s.id);
+                        data.forEach(st => {
+                            if (!existingIds.includes(st.id)) {
+                                this.stations.push(st);
+                            } else {
+                                let localSt = this.stations.find(s => s.id === st.id);
+                                if (localSt) localSt.trainer = st.trainer;
+                            }
+                        });
+                        this.stations.sort((a, b) => a.id - b.id);
+                    }
+                },
+
+                openAddStationModal() {
+                    if (!this.isUnlocked) return;
+                    this.newStationName = '';
+                    this.showAddStationModal = true;
+                },
+
+                async saveNewStation() {
+                    if (!this.newStationName.trim()) {
+                        alert("Escribe el nombre de la estación.");
+                        return;
+                    }
+                    let nextId = this.stations.length > 0 ? Math.max(...this.stations.map(s => s.id)) + 1 : 1;
+                    let newSt = {
+                        id: nextId,
+                        name: this.newStationName.trim(),
+                        region: this.newStationRegion,
+                        trainer: this.newStationTrainer
+                    };
+
+                    let { error } = await supabaseClient.from('stations').insert([newSt]);
+                    if (error) {
+                        alert("Error al guardar estación en Supabase: " + error.message);
+                        return;
+                    }
+
+                    this.stations.push(newSt);
+                    this.stations.sort((a, b) => a.id - b.id);
+                    this.showAddStationModal = false;
+                    alert("¡Estación agregada y sincronizada con éxito!");
+                },
+
+                async updateStationTrainer(st) {
+                    if (!this.isUnlocked) return;
+                    await supabaseClient.from('stations').upsert({
+                        id: st.id,
+                        name: st.name,
+                        region: st.region,
+                        trainer: st.trainer
+                    });
+                },
+
+                async loadVisitsFromSupabase() {
+                    let { data, error } = await supabaseClient.from('visits').select('*');
+                    if (error) return;
+                    let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
+                    data.forEach(item => {
+                        let prefix = item.date_str.substring(0, 7);
+                        let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
+                        if (mKey) {
+                            tempVisits[mKey].push({
+                                id: item.id,
+                                dateStr: item.date_str,
+                                trainer: item.trainer,
+                                stationName: item.station_name,
+                                type: item.type,
+                                status: item.status
+                            });
+                        }
+                    });
+                    this.visits = tempVisits;
+                },
+
+                async loadDayNotesFromSupabase() {
+                    let { data, error } = await supabaseClient.from('day_notes').select('*');
+                    if (error) return;
+                    let notesMap = {};
+                    if (data) {
+                        data.forEach(n => {
+                            notesMap[n.date_str] = n.comment;
+                        });
+                    }
+                    this.dayNotes = notesMap;
+                },
+
+                getDayComment(dateStr) { return this.dayNotes[dateStr] || ''; },
+
+                async saveDayComment(dateStr, commentText) {
+                    if (!this.isUnlocked) return;
+                    this.dayNotes[dateStr] = commentText;
+                    await supabaseClient.from('day_notes').upsert({
+                        date_str: dateStr,
+                        comment: commentText,
+                        trainer: this.currentTrainer
+                    }, { onConflict: 'date_str' });
+                },
+
+                get trainerInitials() { return this.currentTrainer.split(' ').map(n => n[0]).join(''); },
+                get selectedMonthShortName() { return this.monthsConfig[this.selectedMonth]?.name || 'OCT'; },
+                get selectedMonthLabel() { return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026'; },
+                get calendarModalTitle() { return this.calendarMode === 'schedule' ? 'Programar Estación' : 'Reprogramar Visita'; },
+                get calendarModalSubtitle() { return 'Selecciona el día en el calendario'; },
+                selectMonth(m) { this.selectedMonth = m; },
 
                 getTrainerStations() { return this.stations.filter(s => s.trainer === this.currentTrainer); },
                 get filteredStations() {
