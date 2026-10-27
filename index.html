@@ -54,7 +54,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen font-sans" x-data="pumaPlanner()">
 
-    <!-- Header Institucional y Perfil del Capacitador -->
+    <!-- Header Institucional y Control de Acceso -->
     <header class="puma-red text-white shadow-md no-print">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             
@@ -64,25 +64,31 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR OPERATIVO DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo (5 Meses)</p>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, 94 Estaciones y Calendario Interactivo</p>
                 </div>
             </div>
 
-            <!-- Selector de Capacitador Activo -->
-            <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl flex items-center space-x-4 border border-white/20">
-                <div class="w-10 h-10 rounded-full bg-white text-[#E30613] font-black flex items-center justify-center text-sm shadow">
-                    <span x-text="trainerInitials">AL</span>
+            <div class="flex items-center gap-4">
+                <!-- Indicador de Modo de Acceso -->
+                <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl flex items-center space-x-2 border border-white/20 text-xs">
+                    <span x-text="isUnlocked ? '🔓 Modo Edición (Capacitador)' : '🔒 Modo Solo Lectura (Público)'" :class="isUnlocked ? 'text-emerald-300 font-bold' : 'text-amber-200'"></span>
+                    <button @click="toggleAuth()" class="bg-white text-slate-900 px-2.5 py-1 rounded font-bold text-[11px] shadow hover:bg-slate-100 transition cursor-pointer" x-text="isUnlocked ? 'Bloquear' : '🔑 Acceso Capacitador'"></button>
                 </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs uppercase text-red-200 font-bold">Capacitador Activo:</span>
-                        <select x-model="currentTrainer" class="bg-white text-slate-900 text-xs font-bold rounded px-2 py-0.5 outline-none cursor-pointer">
-                            <option value="Alexis León">Alexis León</option>
-                            <option value="Gabriel Vergara">Gabriel Vergara</option>
-                        </select>
+
+                <!-- Selector de Capacitador Activo -->
+                <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl flex items-center space-x-3 border border-white/20">
+                    <div class="w-8 h-8 rounded-full bg-white text-[#E30613] font-black flex items-center justify-center text-xs shadow">
+                        <span x-text="trainerInitials">AL</span>
                     </div>
-                    <p class="text-sm font-black tracking-wide" x-text="currentTrainer"></p>
-                    <p class="text-[10px] text-white/80" x-text="currentTrainer === 'Gabriel Vergara' ? 'Estaciones en Chiriquí' : 'Estaciones Restantes'"></p>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] uppercase text-red-200 font-bold">Capacitador:</span>
+                            <select x-model="currentTrainer" class="bg-white text-slate-900 text-xs font-bold rounded px-1 py-0.5 outline-none cursor-pointer">
+                                <option value="Alexis León">Alexis León</option>
+                                <option value="Gabriel Vergara">Gabriel Vergara</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -146,12 +152,12 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO CON NOTAS E INCIDENCIAS -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO CON NOTAS -->
         <div x-show="activeTab === 'calendar'" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Reporte Mensual de Visitas - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Haz clic en un día para programar visitas o registrar incidencias/comentarios.</p>
+                    <p class="text-xs text-slate-500" x-text="isUnlocked ? 'Modo Edición activo: Haz clic en un día para programar o escribe notas.' : 'Modo Solo Lectura: Puedes consultar la programación y notas libremente.'"></p>
                 </div>
             </div>
 
@@ -165,7 +171,7 @@
                              'border-slate-200': !dayObj.isWeekend && !dayObj.isHoliday
                          }">
                         
-                        <div class="flex justify-between items-center cursor-pointer" @click="openScheduleModalFromCalendar(dayObj)">
+                        <div class="flex justify-between items-center" :class="isUnlocked ? 'cursor-pointer' : ''" @click="if(isUnlocked) openScheduleModalFromCalendar(dayObj)">
                             <span class="text-[10px] font-black uppercase text-slate-500" x-text="dayObj.dayName"></span>
                             <span class="text-xs font-black px-1.5 py-0.2 rounded-full"
                                   :class="{
@@ -182,7 +188,7 @@
                         </div>
 
                         <!-- Visitas Programadas -->
-                        <div class="space-y-1 my-1 cursor-pointer" @click="openScheduleModalFromCalendar(dayObj)">
+                        <div class="space-y-1 my-1" :class="isUnlocked ? 'cursor-pointer' : ''" @click="if(isUnlocked) openScheduleModalFromCalendar(dayObj)">
                             <template x-for="visit in getVisitsForDate(dayObj.dateStr)" :key="visit.id">
                                 <div class="p-1 rounded text-[9px] font-bold border flex flex-col bg-emerald-50 border-emerald-300 text-emerald-900">
                                     <div class="flex justify-between items-center">
@@ -191,8 +197,8 @@
                                     </div>
                                     <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
                                         <button @click.stop="openSingleGoogleCalendarLink(visit)" class="text-blue-700 font-bold hover:underline">GCal</button>
-                                        <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-slate-700 font-bold hover:underline">Reprog.</button>
-                                        <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
+                                        <button x-show="isUnlocked" @click.stop="openCalendarPickerForReprogram(visit)" class="text-slate-700 font-bold hover:underline">Reprog.</button>
+                                        <button x-show="isUnlocked" @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
                                     </div>
                                 </div>
                             </template>
@@ -201,13 +207,14 @@
                             </template>
                         </div>
 
-                        <!-- Sección de Comentario / Incidencia del Día (Directo en la Tarjeta) -->
+                        <!-- Sección de Comentario / Incidencia del Día -->
                         <div class="mt-1 pt-1 border-t border-dashed border-slate-200">
                             <input type="text" 
                                    :value="getDayComment(dayObj.dateStr)" 
                                    @change="saveDayComment(dayObj.dateStr, $event.target.value)"
+                                   :disabled="!isUnlocked"
                                    placeholder="💬 Nota / Incidencia..." 
-                                   class="w-full text-[9px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 outline-none focus:border-red-500">
+                                   class="w-full text-[9px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 outline-none focus:border-red-500 disabled:bg-slate-100 disabled:text-slate-500">
                         </div>
 
                     </div>
@@ -220,10 +227,10 @@
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Programación individual o automática de hasta 2 meses.</p>
+                    <p class="text-xs text-slate-500">Programación individual o automática.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
-                    <button @click="openAutoGeneratorModal()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer">
+                    <button x-show="isUnlocked" @click="openAutoGeneratorModal()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer">
                         <span>⚡ Generar Orden Automático</span>
                     </button>
                     <input type="text" x-model="searchQuery" placeholder="Buscar estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-56 outline-none focus:border-red-600">
@@ -238,7 +245,7 @@
                             <th class="p-2.5 border-b">Nombre de Estación</th>
                             <th class="p-2.5 border-b">Capacitador Asignado</th>
                             <th class="p-2.5 border-b">Región</th>
-                            <th class="p-2.5 border-b text-center no-print">Acción de Programación</th>
+                            <th class="p-2.5 border-b text-center no-print" x-show="isUnlocked">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -247,15 +254,15 @@
                                 <td class="p-2.5 font-bold text-slate-600" x-text="st.id"></td>
                                 <td class="p-2.5 font-semibold text-slate-800" x-text="st.name"></td>
                                 <td class="p-2.5">
-                                    <select x-model="st.trainer" class="border rounded px-2 py-1 text-xs bg-white font-medium">
+                                    <select x-model="st.trainer" :disabled="!isUnlocked" class="border rounded px-2 py-1 text-xs bg-white font-medium disabled:bg-slate-100">
                                         <option value="Alexis León">Alexis León</option>
                                         <option value="Gabriel Vergara">Gabriel Vergara</option>
                                     </select>
                                 </td>
                                 <td class="p-2.5 text-slate-600" x-text="st.region"></td>
-                                <td class="p-2.5 text-center no-print">
+                                <td class="p-2.5 text-center no-print" x-show="isUnlocked">
                                     <button @click="openCalendarPickerForStation(st)" class="puma-green text-white px-3 py-1.5 rounded text-[11px] font-bold shadow hover:opacity-95 transition">
-                                        📅 Programar (Manual)
+                                        📅 Programar
                                     </button>
                                 </td>
                             </tr>
@@ -267,8 +274,24 @@
 
     </main>
 
-    <!-- MODAL 1: SELECCIÓN DE MESES PARA ORDEN AUTOMÁTICO -->
-    <div x-show="showAutoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+    <!-- MODAL DE CONTRASEÑA PARA ACCESO DE CAPACITADOR -->
+    <div x-show="showAuthModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-bold text-slate-800">Acceso de Capacitadores</h3>
+                <button @click="showAuthModal = false" class="text-slate-400 font-bold text-lg">✕</button>
+            </div>
+            <p class="text-xs text-slate-500">Ingresa la contraseña de edición:</p>
+            <input type="password" x-model="authPinInput" placeholder="PIN de acceso..." class="w-full border rounded-lg px-3 py-2 text-xs outline-none focus:border-red-600">
+            <div class="flex justify-end space-x-2 pt-2 border-t">
+                <button @click="showAuthModal = false" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold">Cancelar</button>
+                <button @click="verifyAuthPin()" class="puma-red text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow">Desbloquear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales de Operación (Solo accesibles si está desbloqueado) -->
+    <div x-show="showAutoModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-base font-bold text-slate-800">Generar Orden Automático</h3>
@@ -293,8 +316,7 @@
         </div>
     </div>
 
-    <!-- Modal de Calendario Interactivo -->
-    <div x-show="showCalendarModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+    <div x-show="showCalendarModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
@@ -320,8 +342,7 @@
         </div>
     </div>
 
-    <!-- Modal de Programación Manual con Selección Múltiple -->
-    <div x-show="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+    <div x-show="showModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-xl">
             <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visitas para el ' + modalDateLabel"></h3>
             <div class="flex justify-between items-center text-xs">
@@ -345,7 +366,7 @@
         </div>
     </div>
 
-    <!-- Script con Supabase Cloud Sync -->
+    <!-- Script con Supabase Cloud Sync y Seguridad -->
     <script>
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
@@ -357,6 +378,13 @@
                 currentTrainer: 'Alexis León',
                 selectedMonth: 'current',
                 searchQuery: '',
+                
+                // Seguridad / Control de Acceso
+                isUnlocked: false,
+                showAuthModal: false,
+                authPinInput: '',
+                adminPin: '1985', // Puedes cambiar este PIN de acceso cuando desees
+
                 showModal: false,
                 showCalendarModal: false,
                 showAutoModal: false,
@@ -366,7 +394,6 @@
                 modalDateStr: '',
                 modalDateLabel: '',
                 modalSelectedStationIds: [],
-                modalActivityType: 'Auditoría',
                 selectedAutoMonths: ['current', 'p1'],
 
                 monthsConfig: {
@@ -383,7 +410,27 @@
                 },
 
                 visits: { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] },
-                dayNotes: {}, // Almacén local de notas por fecha {"2026-10-15": "Nota..."}
+                dayNotes: {},
+
+                toggleAuth() {
+                    if (this.isUnlocked) {
+                        this.isUnlocked = false;
+                        alert("Has salido del modo de edición. La aplicación quedó bloqueada en modo lectura.");
+                    } else {
+                        this.authPinInput = '';
+                        this.showAuthModal = true;
+                    }
+                },
+
+                verifyAuthPin() {
+                    if (this.authPinInput === this.adminPin) {
+                        this.isUnlocked = true;
+                        this.showAuthModal = false;
+                        alert("¡Acceso concedido! Ahora puedes editar la planeación y registrar notas.");
+                    } else {
+                        alert("PIN incorrecto. Acceso denegado.");
+                    }
+                },
 
                 async loadVisitsFromSupabase() {
                     let { data, error } = await supabaseClient.from('visits').select('*');
@@ -408,10 +455,7 @@
 
                 async loadDayNotesFromSupabase() {
                     let { data, error } = await supabaseClient.from('day_notes').select('*');
-                    if (error) {
-                        // Si la tabla no existe aún, creamos un manejo suave local o alertamos
-                        return;
-                    }
+                    if (error) return;
                     let notesMap = {};
                     if (data) {
                         data.forEach(n => {
@@ -426,9 +470,8 @@
                 },
 
                 async saveDayComment(dateStr, commentText) {
+                    if (!this.isUnlocked) return;
                     this.dayNotes[dateStr] = commentText;
-                    
-                    // Guardar o actualizar en Supabase (upsert en tabla day_notes)
                     let { error } = await supabaseClient.from('day_notes').upsert({
                         date_str: dateStr,
                         comment: commentText,
@@ -436,7 +479,7 @@
                     }, { onConflict: 'date_str' });
 
                     if (error) {
-                        console.error("Error guardando nota (asegúrate de crear la tabla day_notes en Supabase si deseas persistencia de notas):", error.message);
+                        console.error("Error guardando nota:", error.message);
                     }
                 },
 
@@ -537,12 +580,11 @@
                     { id: 87, name: "Vía Bolívar", region: "Panamá / Otras", trainer: "Alexis León" },
                     { id: 88, name: "Via Porras", region: "Panamá / Otras", trainer: "Alexis León" },
                     { id: 89, name: "Via Tocumen", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 90, name: "Villa de la fuente", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 91, name: "villa de July", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 92, name: "Villa lobos", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 93, name: "Vista Alegre", region: "Panamá / Otras", trainer: "Alexis León" },
-                    { id: 94, name: "Volcán", region: "Chiriquí", trainer: "Gabriel Vergara" },
-                    { id: 95, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" }
+                    { id: 90, name: "villa de de la fuente", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 91, name: "Villa lobos", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 92, name: "vista alegre", region: "Panamá / Otras", trainer: "Alexis León" },
+                    { id: 93, name: "Volcán", region: "Chiriquí", trainer: "Gabriel Vergara" },
+                    { id: 94, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" }
                 ],
 
                 getTrainerStations() { return this.stations.filter(s => s.trainer === this.currentTrainer); },
@@ -577,6 +619,7 @@
                 getVisitsForDate(dateStr) { return this.getTrainerVisits().filter(v => v.dateStr === dateStr); },
 
                 openScheduleModalFromCalendar(dayObj) {
+                    if (!this.isUnlocked) return;
                     this.modalDateStr = dayObj.dateStr;
                     this.modalDateLabel = `${dayObj.dayName} ${dayObj.dayNum} (${this.selectedMonthLabel})`;
                     this.modalSelectedStationIds = [];
@@ -591,18 +634,21 @@
                 },
 
                 openCalendarPickerForStation(st) {
+                    if (!this.isUnlocked) return;
                     this.activeStationToSchedule = st;
                     this.calendarMode = 'schedule';
                     this.showCalendarModal = true;
                 },
 
                 openCalendarPickerForReprogram(visit) {
+                    if (!this.isUnlocked) return;
                     this.activeVisitToReprogram = visit;
                     this.calendarMode = 'reprogram';
                     this.showCalendarModal = true;
                 },
 
                 async handleCalendarDateSelection(dateStr) {
+                    if (!this.isUnlocked) return;
                     if (this.calendarMode === 'schedule' && this.activeStationToSchedule) {
                         let st = this.activeStationToSchedule;
                         await supabaseClient.from('visits').insert([{
@@ -617,7 +663,7 @@
                 },
 
                 async saveModalVisit() {
-                    if (this.modalSelectedStationIds.length === 0) return;
+                    if (!this.isUnlocked || this.modalSelectedStationIds.length === 0) return;
                     let rowsToInsert = this.modalSelectedStationIds.map(stId => {
                         let st = this.stations.find(s => s.id == stId);
                         return {
@@ -633,7 +679,7 @@
                     this.showModal = false;
                 },
 
-                openAutoGeneratorModal() { this.showAutoModal = true; },
+                openAutoGeneratorModal() { if(this.isUnlocked) this.showAutoModal = true; },
                 toggleAutoMonth(mKey) {
                     let idx = this.selectedAutoMonths.indexOf(mKey);
                     if (idx > -1) this.selectedAutoMonths.splice(idx, 1);
@@ -644,6 +690,7 @@
                 },
 
                 async executeAutomaticSchedule() {
+                    if (!this.isUnlocked) return;
                     let trainerStations = this.stations.filter(s => s.trainer === this.currentTrainer);
                     let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
                     let stationIndex = 0;
@@ -673,6 +720,7 @@
                 },
 
                 async deleteVisit(visit) {
+                    if (!this.isUnlocked) return;
                     if (confirm(`¿Eliminar ${visit.stationName}?`)) {
                         await supabaseClient.from('visits').delete().eq('id', visit.id);
                         await this.loadVisitsFromSupabase();
@@ -692,6 +740,15 @@
                     link.href = window.URL.createObjectURL(blob);
                     link.download = `Visitas_Puma_${this.selectedMonthShortName}.ics`;
                     link.click();
+                },
+
+                openSingleGoogleCalendarLink(visit) {
+                    let dateClean = visit.dateStr.replace(/-/g, "");
+                    let title = encodeURIComponent(`Visita Puma: ${visit.stationName}`);
+                    let details = encodeURIComponent(`Capacitador: ${visit.trainer}\nTipo de actividad: ${visit.type}`);
+                    let location = encodeURIComponent(`Estación Puma Energy ${visit.stationName}`);
+                    let gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateClean}/${dateClean}&details=${details}&location=${location}`;
+                    window.open(gCalUrl, '_blank');
                 },
 
                 exportMonthPDF() { window.print(); }
