@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .puma-red { background-color: #E30613; }
         .puma-green { background-color: #00875A; }
@@ -417,8 +419,13 @@
         </div>
     </div>
 
-    <!-- Script de la aplicación con Múltiple Selección y Validación de Repetición -->
+    <!-- Script de la aplicación con Supabase Cloud Sync -->
     <script>
+        // Configuración de Supabase con tus credenciales
+        const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UI...'; // Reemplaza con tu llave anon completa si es necesario
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         function pumaPlanner() {
             return {
                 activeTab: 'calendar',
@@ -443,6 +450,41 @@
                     'current': { name: 'OCT', label: 'Octubre 2026', prefix: '2026-10', days: 31 },
                     'p1': { name: 'NOV', label: 'Noviembre 2026', prefix: '2026-11', days: 30 },
                     'p2': { name: 'DIC', label: 'Diciembre 2026', prefix: '2026-12', days: 31 }
+                },
+
+                async init() {
+                    await this.loadVisitsFromSupabase();
+                },
+
+                async loadVisitsFromSupabase() {
+                    try {
+                        let { data, error } = await supabaseClient.from('visits').select('*');
+                        if (error) {
+                            console.error('Error al cargar visitas:', error);
+                            return;
+                        }
+                        
+                        // Limpiar y reorganizar por meses según la fecha guardada
+                        let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
+                        
+                        data.forEach(item => {
+                            let prefix = item.date_str.substring(0, 7); // Ej: "2026-10"
+                            let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
+                            if (mKey) {
+                                tempVisits[mKey].push({
+                                    id: item.id,
+                                    dateStr: item.date_str,
+                                    trainer: item.trainer,
+                                    stationName: item.station_name,
+                                    type: item.type,
+                                    status: item.status
+                                });
+                            }
+                        });
+                        this.visits = tempVisits;
+                    } catch (e) {
+                        console.error('Excepción al conectar con Supabase:', e);
+                    }
                 },
 
                 get trainerInitials() {
@@ -673,7 +715,7 @@
                     this.showCalendarModal = true;
                 },
 
-                handleCalendarDateSelection(dateStr) {
+                async handleCalendarDateSelection(dateStr) {
                     if (this.calendarMode === 'schedule') {
                         if (!this.activeStationToSchedule) return;
                         let st = this.activeStationToSchedule;
@@ -686,33 +728,41 @@
                             return;
                         }
 
-                        if (!this.visits[targetMonthKey]) {
-                            this.visits[targetMonthKey] = [];
-                        }
-
-                        this.visits[targetMonthKey].push({
-                            id: Date.now() + Math.floor(Math.random()*1000),
-                            dateStr: dateStr,
+                        // Guardar en Supabase
+                        let { data, error } = await supabaseClient.from('visits').insert([{
+                            date_str: dateStr,
                             trainer: st.trainer,
-                            stationName: `${st.id}. ${st.name}`,
+                            station_name: `${st.id}. ${st.name}`,
                             type: 'Auditoría',
                             status: 'Programada'
-                        });
+                        }]).select();
 
+                        if (error) {
+                            alert('Error al guardar en la base de datos: ' + error.message);
+                            return;
+                        }
+
+                        await this.loadVisitsFromSupabase();
                         alert(`¡Estación #${st.id} (${st.name}) programada manualmente con éxito para el ${dateStr}!`);
                     } else if (this.calendarMode === 'reprogram') {
                         if (!this.activeVisitToReprogram) return;
                         let visit = this.activeVisitToReprogram;
 
-                        visit.dateStr = dateStr;
-                        visit.status = 'Programada';
+                        // Actualizar en Supabase
+                        let { error } = await supabaseClient.from('visits').update({ date_str: dateStr }).eq('id', visit.id);
+                        if (error) {
+                            alert('Error al reprogramar: ' + error.message);
+                            return;
+                        }
+
+                        await this.loadVisitsFromSupabase();
                         alert(`Visita a ${visit.stationName} reprogramada exitosamente para el ${dateStr}.`);
                     }
 
                     this.showCalendarModal = false;
                 },
 
-                saveModalVisit() {
+                async saveModalVisit() {
                     if (this.modalSelectedStationIds.length === 0) {
                         alert("Por favor seleccione al menos una estación.");
                         return;
@@ -748,21 +798,22 @@
                         }
                     }
 
-                    if (!this.visits[targetMonthKey]) {
-                        this.visits[targetMonthKey] = [];
+                    // Preparar registros para Supabase
+                    let newRows = stationsToAdd.map(st => ({
+                        date_str: this.modalDateStr,
+                        trainer: this.currentTrainer,
+                        station_name: `${st.id}. ${st.name}`,
+                        type: this.modalActivityType,
+                        status: 'Programada'
+                    }));
+
+                    let { error } = await supabaseClient.from('visits').insert(newRows);
+                    if (error) {
+                        alert('Error al guardar las visitas: ' + error.message);
+                        return;
                     }
 
-                    stationsToAdd.forEach(st => {
-                        this.visits[targetMonthKey].push({
-                            id: Date.now() + Math.floor(Math.random()*10000),
-                            dateStr: this.modalDateStr,
-                            trainer: this.currentTrainer,
-                            stationName: `${st.id}. ${st.name}`,
-                            type: this.modalActivityType,
-                            status: 'Programada'
-                        });
-                    });
-
+                    await this.loadVisitsFromSupabase();
                     alert(`¡Se programaron ${stationsToAdd.length} estación(es) con éxito para el ${this.modalDateStr}!`);
                     this.showModal = false;
                     this.modalSelectedStationIds = [];
@@ -785,7 +836,7 @@
                     }
                 },
 
-                executeAutomaticSchedule() {
+                async executeAutomaticSchedule() {
                     if (this.selectedAutoMonths.length === 0) {
                         alert("Por favor seleccione al menos un mes.");
                         return;
@@ -811,6 +862,7 @@
                     let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
                     let stationIndex = 0;
                     let assignedCount = 0;
+                    let rowsToInsert = [];
 
                     for (let mKey of this.selectedAutoMonths) {
                         let cfg = this.monthsConfig[mKey];
@@ -826,20 +878,15 @@
                             }
                         }
 
-                        if (!this.visits[mKey]) {
-                            this.visits[mKey] = [];
-                        }
-
                         for (let dateStr of validDays) {
                             let dailyCount = 0;
                             while (dailyCount < 3 && stationIndex < trainerStations.length) {
                                 let st = trainerStations[stationIndex];
                                 
-                                this.visits[mKey].push({
-                                    id: Date.now() + Math.floor(Math.random()*10000),
-                                    dateStr: dateStr,
+                                rowsToInsert.push({
+                                    date_str: dateStr,
                                     trainer: st.trainer,
-                                    stationName: `${st.id}. ${st.name}`,
+                                    station_name: `${st.id}. ${st.name}`,
                                     type: 'Auditoría',
                                     status: 'Programada'
                                 });
@@ -855,20 +902,26 @@
                         }
                     }
 
+                    // Guardar todas las automáticas en Supabase
+                    let { error } = await supabaseClient.from('visits').insert(rowsToInsert);
+                    if (error) {
+                        alert('Error al guardar el orden automático: ' + error.message);
+                        return;
+                    }
+
+                    await this.loadVisitsFromSupabase();
                     this.showAutoModal = false;
-                    alert(`¡Orden automático generado con éxito! Se programaron ${assignedCount} visitas para ${this.currentTrainer} en (${selectedLabels}) [máx. 3 por día, martes a viernes, sin feriados].`);
+                    alert(`¡Orden automático generado y sincronizado con éxito! Se programaron ${assignedCount} visitas para ${this.currentTrainer} en (${selectedLabels}) [máx. 3 por día, martes a viernes, sin feriados].`);
                 },
 
-                deleteVisit(visit) {
+                async deleteVisit(visit) {
                     if (confirm(`¿Está seguro de eliminar la programación de ${visit.stationName}?`)) {
-                        Object.keys(this.visits).forEach(mKey => {
-                            if (this.visits[mKey]) {
-                                let idx = this.visits[mKey].findIndex(v => v.id === visit.id);
-                                if (idx !== -1) {
-                                    this.visits[mKey].splice(idx, 1);
-                                }
-                            }
-                        });
+                        let { error } = await supabaseClient.from('visits').delete().eq('id', visit.id);
+                        if (error) {
+                            alert('Error al eliminar la visita: ' + error.message);
+                            return;
+                        }
+                        await this.loadVisitsFromSupabase();
                     }
                 },
 
