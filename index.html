@@ -16,14 +16,13 @@
         .text-puma-red { color: #E30613; }
         .text-puma-green { color: #00875A; }
         
-        /* Configuración Estricta de Impresión / Exportación PDF en 1 Página Carta (8.5 x 11 pulg) */
         @page {
             size: letter portrait;
             margin: 0.4in;
         }
 
         @media print {
-            header, nav, .no-print, button, input {
+            header, nav, .no-print, button, input, textarea {
                 display: none !important;
             }
             body {
@@ -40,21 +39,13 @@
                 box-shadow: none !important;
                 border: none !important;
             }
-            .page-break-after {
-                break-after: page;
-                page-break-after: always;
-            }
-            .card-print {
-                border: 1px solid #ddd !important;
-                padding: 4px !important;
-            }
             .grid-print-calendar {
                 display: grid !important;
                 grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
                 gap: 4px !important;
             }
             .day-card-print {
-                min-height: 75px !important;
+                min-height: 85px !important;
                 padding: 3px !important;
                 border: 1px solid #ccc !important;
             }
@@ -116,45 +107,20 @@
                 </div>
             </div>
 
-            <!-- Navegador de 5 Meses + Botones de Exportación / Google Calendar -->
+            <!-- Navegador de 5 Meses + Botones de Exportación -->
             <div class="flex flex-wrap items-center justify-center gap-1.5 no-print">
-                <button @click="selectMonth('m-2')" 
-                        :class="selectedMonth === 'm-2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                    <span>Agosto</span>
-                </button>
+                <button @click="selectMonth('m-2')" :class="selectedMonth === 'm-2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Agosto</button>
+                <button @click="selectMonth('m-1')" :class="selectedMonth === 'm-1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Septiembre</button>
+                <button @click="selectMonth('current')" :class="selectedMonth === 'current' ? 'puma-red text-white shadow ring-2 ring-red-400' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-3 py-1.5 rounded-lg text-xs font-black transition">📌 Octubre (Actual)</button>
+                <button @click="selectMonth('p1')" :class="selectedMonth === 'p1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Noviembre</button>
+                <button @click="selectMonth('p2')" :class="selectedMonth === 'p2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Diciembre</button>
 
-                <button @click="selectMonth('m-1')" 
-                        :class="selectedMonth === 'm-1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                    <span>Septiembre</span>
-                </button>
-
-                <button @click="selectMonth('current')" 
-                        :class="selectedMonth === 'current' ? 'puma-red text-white shadow ring-2 ring-red-400' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-black transition">
-                    <span>📌 Octubre (Actual)</span>
-                </button>
-
-                <button @click="selectMonth('p1')" 
-                        :class="selectedMonth === 'p1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                    <span>Noviembre</span>
-                </button>
-
-                <button @click="selectMonth('p2')" 
-                        :class="selectedMonth === 'p2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'"
-                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
-                    <span>Diciembre</span>
-                </button>
-
-                <!-- Botón de Sincronización con Google Calendar (.ICS) -->
                 <button @click="exportToGoogleCalendarICS()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-blue-700 transition ml-2 flex items-center space-x-1 cursor-pointer">
-                    <span>📅 Exportar a Google Calendar (.ics)</span>
+                    <span>📅 Exportar GCal (.ics)</span>
                 </button>
 
                 <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
-                    <span>📄 PDF (1 pág 8.5x11)</span>
+                    <span>📄 PDF (1 pág)</span>
                 </button>
             </div>
 
@@ -180,32 +146,26 @@
             <button @click="activeTab = 'directory'" :class="activeTab === 'directory' ? 'puma-red text-white' : 'bg-white text-slate-700 hover:bg-slate-50'" class="px-5 py-2.5 rounded-lg font-bold text-sm shadow-sm transition">🏢 Directorio y Generador Automático</button>
         </div>
 
-        <!-- VISTA 1: CALENDARIO INTERACTIVO -->
+        <!-- VISTA 1: CALENDARIO INTERACTIVO CON NOTAS E INCIDENCIAS -->
         <div x-show="activeTab === 'calendar'" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Reporte Mensual de Visitas - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500">Capacitador: <span class="font-bold text-red-600" x-text="currentTrainer"></span> | Límite por día: Máx 3 Auto (máx 2 meses) / Máx 4 Manual</p>
-                </div>
-                <div class="flex items-center space-x-3 text-xs no-print">
-                    <span class="flex items-center"><span class="w-3 h-3 bg-white border border-slate-300 rounded-sm inline-block mr-1"></span> Día Hábil</span>
-                    <span class="flex items-center"><span class="w-3 h-3 bg-amber-100 border border-amber-300 rounded-sm inline-block mr-1"></span> Sábado / Domingo</span>
-                    <span class="flex items-center"><span class="w-3 h-3 bg-red-100 border border-red-300 rounded-sm inline-block mr-1"></span> Feriado</span>
+                    <p class="text-xs text-slate-500">Haz clic en un día para programar visitas o registrar incidencias/comentarios.</p>
                 </div>
             </div>
 
             <!-- Grilla del Calendario Mensual -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 grid-print-calendar">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
-                    <div @click="openScheduleModalFromCalendar(dayObj)" 
-                         class="bg-white rounded-xl p-2 shadow-sm border cursor-pointer hover:border-red-600 transition flex flex-col justify-between day-card-print"
+                    <div class="bg-white rounded-xl p-2 shadow-sm border flex flex-col justify-between day-card-print"
                          :class="{
                              'bg-amber-50/60 border-amber-200': dayObj.isWeekend,
                              'bg-red-50/60 border-red-200': dayObj.isHoliday,
                              'border-slate-200': !dayObj.isWeekend && !dayObj.isHoliday
                          }">
                         
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-center cursor-pointer" @click="openScheduleModalFromCalendar(dayObj)">
                             <span class="text-[10px] font-black uppercase text-slate-500" x-text="dayObj.dayName"></span>
                             <span class="text-xs font-black px-1.5 py-0.2 rounded-full"
                                   :class="{
@@ -221,28 +181,35 @@
                             </template>
                         </div>
 
-                        <!-- Visitas Programadas en este Día -->
-                        <div class="space-y-1 my-1">
+                        <!-- Visitas Programadas -->
+                        <div class="space-y-1 my-1 cursor-pointer" @click="openScheduleModalFromCalendar(dayObj)">
                             <template x-for="visit in getVisitsForDate(dayObj.dateStr)" :key="visit.id">
                                 <div class="p-1 rounded text-[9px] font-bold border flex flex-col bg-emerald-50 border-emerald-300 text-emerald-900">
                                     <div class="flex justify-between items-center">
                                         <span class="truncate" x-text="visit.stationName"></span>
                                         <span class="text-[8px] px-0.5 rounded text-white bg-[#00875A]">OK</span>
                                     </div>
-                                    <!-- Botones de Acción -->
                                     <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
-                                        <button @click.stop="openSingleGoogleCalendarLink(visit)" class="text-blue-700 font-bold hover:underline" title="Agregar a Google Calendar">📅 GCal</button>
+                                        <button @click.stop="openSingleGoogleCalendarLink(visit)" class="text-blue-700 font-bold hover:underline">GCal</button>
                                         <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-slate-700 font-bold hover:underline">Reprog.</button>
                                         <button @click.stop="deleteVisit(visit)" class="text-red-700 font-bold hover:underline">Elim.</button>
                                     </div>
                                 </div>
                             </template>
                             <template x-if="getVisitsForDate(dayObj.dateStr).length === 0">
-                                <p class="text-[9px] text-slate-300 italic text-center py-1">Libre</p>
+                                <p class="text-[9px] text-slate-300 italic text-center py-0.5">Libre</p>
                             </template>
                         </div>
 
-                        <div class="text-[9px] text-center text-slate-400 font-semibold no-print">+ Agregar</div>
+                        <!-- Sección de Comentario / Incidencia del Día (Directo en la Tarjeta) -->
+                        <div class="mt-1 pt-1 border-t border-dashed border-slate-200">
+                            <input type="text" 
+                                   :value="getDayComment(dayObj.dateStr)" 
+                                   @change="saveDayComment(dayObj.dateStr, $event.target.value)"
+                                   placeholder="💬 Nota / Incidencia..." 
+                                   class="w-full text-[9px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 outline-none focus:border-red-500">
+                        </div>
+
                     </div>
                 </template>
             </div>
@@ -253,10 +220,10 @@
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Puedes programar de forma individual o generar la orden automática eligiendo hasta un máximo de 2 meses específicos.</p>
+                    <p class="text-xs text-slate-500">Programación individual o automática de hasta 2 meses.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
-                    <button @click="openAutoGeneratorModal()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition flex items-center space-x-2 cursor-pointer">
+                    <button @click="openAutoGeneratorModal()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer">
                         <span>⚡ Generar Orden Automático</span>
                     </button>
                     <input type="text" x-model="searchQuery" placeholder="Buscar estación..." class="border rounded-lg px-3 py-1.5 text-xs w-full sm:w-56 outline-none focus:border-red-600">
@@ -304,57 +271,35 @@
     <div x-show="showAutoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
-                <div>
-                    <h3 class="text-base font-bold text-slate-800">Generar Orden Automático</h3>
-                    <p class="text-xs text-slate-500">Seleccione los meses a programar para <span class="font-bold text-red-600" x-text="currentTrainer"></span>.</p>
-                </div>
-                <button @click="showAutoModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                <h3 class="text-base font-bold text-slate-800">Generar Orden Automático</h3>
+                <button @click="showAutoModal = false" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
-
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
-                <p class="font-bold">⚠️ Reglas de Generación:</p>
-                <ul class="list-disc list-inside space-y-0.5 text-[11px]">
-                    <li>Máximo <strong>2 meses</strong> por generación.</li>
-                    <li>Martes a Viernes (sin contar feriados).</li>
-                    <li>Máximo <strong>3 estaciones por día</strong>.</li>
-                    <li>Solo para estaciones de <strong><span x-text="currentTrainer"></span></strong>.</li>
-                </ul>
-            </div>
-
             <div class="space-y-2">
                 <label class="text-xs font-bold text-slate-700">Seleccione los meses (máximo 2):</label>
                 <div class="grid grid-cols-1 gap-2">
                     <template x-for="(cfg, mKey) in monthsConfig" :key="mKey">
                         <label class="flex items-center space-x-3 p-2.5 rounded-lg border cursor-pointer hover:bg-slate-50 transition"
                                :class="selectedAutoMonths.includes(mKey) ? 'border-red-500 bg-red-50/50' : 'border-slate-200'">
-                            <input type="checkbox" :value="mKey" 
-                                   @change="toggleAutoMonth(mKey)"
-                                   :checked="selectedAutoMonths.includes(mKey)"
-                                   class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                            <input type="checkbox" :value="mKey" @change="toggleAutoMonth(mKey)" :checked="selectedAutoMonths.includes(mKey)" class="w-4 h-4 text-red-600 rounded">
                             <span class="text-xs font-bold text-slate-800" x-text="cfg.label"></span>
                         </label>
                     </template>
                 </div>
             </div>
-
             <div class="flex justify-end space-x-2 pt-3 border-t">
-                <button @click="showAutoModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button @click="executeAutomaticSchedule()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Ejecutar Programación</button>
+                <button @click="showAutoModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cancelar</button>
+                <button @click="executeAutomaticSchedule()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow">Ejecutar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Calendario Visual Interactivo -->
+    <!-- Modal de Calendario Interactivo -->
     <div x-show="showCalendarModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
-                <div>
-                    <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
-                    <p class="text-xs text-slate-500" x-text="calendarModalSubtitle"></p>
-                </div>
-                <button @click="showCalendarModal = false" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+                <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
+                <button @click="showCalendarModal = false" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
-
             <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
                 <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
                     <div @click="handleCalendarDateSelection(dayObj.dateStr)"
@@ -366,62 +311,42 @@
                          }">
                         <span class="text-[9px] uppercase font-bold text-slate-400" x-text="dayObj.dayName"></span>
                         <span class="text-sm font-black" x-text="dayObj.dayNum"></span>
-                        <template x-if="dayObj.isHoliday">
-                            <span class="text-[8px] bg-red-600 text-white px-1 rounded mt-0.5">Feriado</span>
-                        </template>
                     </div>
                 </template>
             </div>
-
             <div class="flex justify-end pt-2 border-t">
-                <button @click="showCalendarModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cerrar</button>
+                <button @click="showCalendarModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cerrar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Programación Manual con Selección Múltiple (Hasta 3 estaciones) -->
+    <!-- Modal de Programación Manual con Selección Múltiple -->
     <div x-show="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-xl">
             <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visitas para el ' + modalDateLabel"></h3>
             <div class="flex justify-between items-center text-xs">
-                <p class="text-slate-500">Selecciona <span class="font-bold text-red-600">hasta 3 estaciones</span> a la vez.</p>
+                <p class="text-slate-500">Selecciona <span class="font-bold text-red-600">hasta 3 estaciones</span>.</p>
                 <span class="font-bold text-red-600 px-2 py-0.5 bg-red-50 rounded border border-red-200" x-text="modalSelectedStationIds.length + '/3 seleccionadas'"></span>
             </div>
-            
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700">Listado de Estaciones (<span x-text="currentTrainer"></span>):</label>
                 <div class="border rounded-xl max-h-52 overflow-y-auto p-2 space-y-1 bg-slate-50">
                     <template x-for="st in getTrainerStations()" :key="st.id">
-                        <label class="flex items-center space-x-2.5 p-1.5 hover:bg-white rounded-lg cursor-pointer text-xs transition border border-transparent hover:border-slate-200">
-                            <input type="checkbox" :value="st.id" x-model="modalSelectedStationIds" 
-                                   @change="checkStationSelectionLimit($event)"
-                                   class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                        <label class="flex items-center space-x-2.5 p-1.5 hover:bg-white rounded-lg cursor-pointer text-xs transition">
+                            <input type="checkbox" :value="st.id" x-model="modalSelectedStationIds" @change="checkStationSelectionLimit($event)" class="w-4 h-4 text-red-600 rounded">
                             <span x-text="st.id + '. ' + st.name" class="font-medium text-slate-800"></span>
                         </label>
                     </template>
                 </div>
             </div>
-
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700">Tipo de Actividad:</label>
-                <select x-model="modalActivityType" class="w-full border rounded-lg p-2 text-xs bg-white">
-                    <option value="Auditoría">Auditoría</option>
-                    <option value="Evaluación de Experiencia del Cliente">Evaluación de Experiencia del Cliente</option>
-                    <option value="Capacitación Pista">Capacitador Pista</option>
-                    <option value="Administrativo">Administrativo</option>
-                </select>
-            </div>
-
             <div class="flex justify-end space-x-2 pt-3 border-t">
-                <button @click="showModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Guardar Visitas Seleccionadas</button>
+                <button @click="showModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cancelar</button>
+                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow">Guardar</button>
             </div>
         </div>
     </div>
 
-    <!-- Script de la aplicación con Supabase Cloud Sync -->
+    <!-- Script con Supabase Cloud Sync -->
     <script>
-        // Configuración de Supabase con tus credenciales reales
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -454,69 +379,73 @@
 
                 async init() {
                     await this.loadVisitsFromSupabase();
+                    await this.loadDayNotesFromSupabase();
                 },
+
+                visits: { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] },
+                dayNotes: {}, // Almacén local de notas por fecha {"2026-10-15": "Nota..."}
 
                 async loadVisitsFromSupabase() {
-                    try {
-                        let { data, error } = await supabaseClient.from('visits').select('*');
-                        if (error) {
-                            console.error('Error al cargar visitas:', error);
-                            return;
+                    let { data, error } = await supabaseClient.from('visits').select('*');
+                    if (error) return;
+                    let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
+                    data.forEach(item => {
+                        let prefix = item.date_str.substring(0, 7);
+                        let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
+                        if (mKey) {
+                            tempVisits[mKey].push({
+                                id: item.id,
+                                dateStr: item.date_str,
+                                trainer: item.trainer,
+                                stationName: item.station_name,
+                                type: item.type,
+                                status: item.status
+                            });
                         }
-                        
-                        let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
-                        
-                        data.forEach(item => {
-                            let prefix = item.date_str.substring(0, 7);
-                            let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
-                            if (mKey) {
-                                tempVisits[mKey].push({
-                                    id: item.id,
-                                    dateStr: item.date_str,
-                                    trainer: item.trainer,
-                                    stationName: item.station_name,
-                                    type: item.type,
-                                    status: item.status
-                                });
-                            }
+                    });
+                    this.visits = tempVisits;
+                },
+
+                async loadDayNotesFromSupabase() {
+                    let { data, error } = await supabaseClient.from('day_notes').select('*');
+                    if (error) {
+                        // Si la tabla no existe aún, creamos un manejo suave local o alertamos
+                        return;
+                    }
+                    let notesMap = {};
+                    if (data) {
+                        data.forEach(n => {
+                            notesMap[n.date_str] = n.comment;
                         });
-                        this.visits = tempVisits;
-                    } catch (e) {
-                        console.error('Excepción al conectar con Supabase:', e);
+                    }
+                    this.dayNotes = notesMap;
+                },
+
+                getDayComment(dateStr) {
+                    return this.dayNotes[dateStr] || '';
+                },
+
+                async saveDayComment(dateStr, commentText) {
+                    this.dayNotes[dateStr] = commentText;
+                    
+                    // Guardar o actualizar en Supabase (upsert en tabla day_notes)
+                    let { error } = await supabaseClient.from('day_notes').upsert({
+                        date_str: dateStr,
+                        comment: commentText,
+                        trainer: this.currentTrainer
+                    }, { onConflict: 'date_str' });
+
+                    if (error) {
+                        console.error("Error guardando nota (asegúrate de crear la tabla day_notes en Supabase si deseas persistencia de notas):", error.message);
                     }
                 },
 
-                get trainerInitials() {
-                    return this.currentTrainer.split(' ').map(n => n[0]).join('');
-                },
-
-                get selectedMonthShortName() {
-                    return this.monthsConfig[this.selectedMonth]?.name || 'OCT';
-                },
-
-                get selectedMonthLabel() {
-                    return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026';
-                },
-
-                get calendarModalTitle() {
-                    if (this.calendarMode === 'schedule') {
-                        return 'Programar Estación: ' + (this.activeStationToSchedule ? this.activeStationToSchedule.id + '. ' + this.activeStationToSchedule.name : '');
-                    } else {
-                        return 'Reprogramar Visita: ' + (this.activeVisitToReprogram ? this.activeVisitToReprogram.stationName : '');
-                    }
-                },
-
-                get calendarModalSubtitle() {
-                    if (this.calendarMode === 'schedule') {
-                        return 'Selecciona el día en el calendario de ' + this.selectedMonthLabel + ' para ' + this.currentTrainer;
-                    } else {
-                        return 'Selecciona la nueva fecha en el calendario para la reprogramación';
-                    }
-                },
-
-                selectMonth(monthKey) {
-                    this.selectedMonth = monthKey;
-                },
+                get trainerInitials() { return this.currentTrainer.split(' ').map(n => n[0]).join(''); },
+                get selectedMonthShortName() { return this.monthsConfig[this.selectedMonth]?.name || 'OCT'; },
+                get selectedMonthLabel() { return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026'; },
+                get calendarModalTitle() { return this.calendarMode === 'schedule' ? 'Programar Estación' : 'Reprogramar Visita'; },
+                get calendarModalSubtitle() { return 'Selecciona el día en el calendario'; },
+                selectMonth(m) { this.selectedMonth = m; },
 
                 stations: [
                     { id: 1, name: "4 Altos", region: "Panamá / Otras", trainer: "Alexis León" },
@@ -615,38 +544,12 @@
                     { id: 94, name: "West Garden", region: "Panamá / Otras", trainer: "Alexis León" }
                 ],
 
-                visits: {
-                    'm-2': [],
-                    'm-1': [],
-                    'current': [],
-                    'p1': [],
-                    'p2': []
-                },
-
-                getTrainerStations() {
-                    return this.stations.filter(s => s.trainer === this.currentTrainer);
-                },
-
+                getTrainerStations() { return this.stations.filter(s => s.trainer === this.currentTrainer); },
                 get filteredStations() {
                     if (!this.searchQuery) return this.stations;
-                    return this.stations.filter(s => 
-                        s.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
-                        s.id.toString().includes(this.searchQuery)
-                    );
+                    return this.stations.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || s.id.toString().includes(this.searchQuery));
                 },
-
-                getTrainerVisits() {
-                    let monthVisits = this.visits[this.selectedMonth] || [];
-                    return monthVisits.filter(v => v.trainer === this.currentTrainer);
-                },
-
-                isStationAlreadyScheduledAnywhere(stationNameFull) {
-                    for (let mKey in this.visits) {
-                        let found = this.visits[mKey].find(v => v.stationName === stationNameFull && v.trainer === this.currentTrainer);
-                        if (found) return true;
-                    }
-                    return false;
-                },
+                getTrainerVisits() { return (this.visits[this.selectedMonth] || []).filter(v => v.trainer === this.currentTrainer); },
 
                 getMonthCalendarDays() {
                     let currentCfg = this.monthsConfig[this.selectedMonth] || this.monthsConfig['current'];
@@ -657,27 +560,20 @@
                     for (let i = 1; i <= currentCfg.days; i++) {
                         let dayNumStr = i < 10 ? '0' + i : '' + i;
                         let dateStr = `${currentCfg.prefix}-${dayNumStr}`;
-
                         let d = new Date(dateStr + 'T00:00:00');
                         let dayOfWeek = d.getDay();
-                        let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                        let isHoliday = holidays.includes(dateStr);
-                        let dayName = weekdays[dayOfWeek];
-
                         list.push({
                             dateStr: dateStr,
                             dayNum: i,
-                            dayName: dayName,
-                            isWeekend: isWeekend,
-                            isHoliday: isHoliday
+                            dayName: weekdays[dayOfWeek],
+                            isWeekend: (dayOfWeek === 0 || dayOfWeek === 6),
+                            isHoliday: holidays.includes(dateStr)
                         });
                     }
                     return list;
                 },
 
-                getVisitsForDate(dateStr) {
-                    return this.getTrainerVisits().filter(v => v.dateStr === dateStr);
-                },
+                getVisitsForDate(dateStr) { return this.getTrainerVisits().filter(v => v.dateStr === dateStr); },
 
                 openScheduleModalFromCalendar(dayObj) {
                     this.modalDateStr = dayObj.dateStr;
@@ -688,294 +584,116 @@
 
                 checkStationSelectionLimit(event) {
                     if (this.modalSelectedStationIds.length > 3) {
-                        alert("Solo puedes seleccionar un máximo de 3 estaciones a la vez.");
+                        alert("Máximo 3 estaciones a la vez.");
                         this.modalSelectedStationIds.pop();
                     }
                 },
 
                 openCalendarPickerForStation(st) {
-                    let stationNameFull = `${st.id}. ${st.name}`;
-                    if (this.isStationAlreadyScheduledAnywhere(stationNameFull)) {
-                        if (!confirm(`⚠️ La estación "${st.name}" ya ha sido programada previamente en el plan. ¿Estás seguro de que deseas programar esta estación otra vez?`)) {
-                            return;
-                        }
-                    }
-
                     this.activeStationToSchedule = st;
-                    this.activeVisitToReprogram = null;
                     this.calendarMode = 'schedule';
                     this.showCalendarModal = true;
                 },
 
                 openCalendarPickerForReprogram(visit) {
                     this.activeVisitToReprogram = visit;
-                    this.activeStationToSchedule = null;
                     this.calendarMode = 'reprogram';
                     this.showCalendarModal = true;
                 },
 
                 async handleCalendarDateSelection(dateStr) {
-                    if (this.calendarMode === 'schedule') {
-                        if (!this.activeStationToSchedule) return;
+                    if (this.calendarMode === 'schedule' && this.activeStationToSchedule) {
                         let st = this.activeStationToSchedule;
-
-                        let targetMonthKey = this.selectedMonth;
-
-                        let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === dateStr && v.trainer === st.trainer);
-                        if (existingOnDate.length >= 4) {
-                            alert(`Límite alcanzado: Ya hay 4 estaciones programadas para este capacitador el ${dateStr}. (Máximo manual: 4)`);
-                            return;
-                        }
-
-                        let { data, error } = await supabaseClient.from('visits').insert([{
-                            date_str: dateStr,
-                            trainer: st.trainer,
-                            station_name: `${st.id}. ${st.name}`,
-                            type: 'Auditoría',
-                            status: 'Programada'
-                        }]).select();
-
-                        if (error) {
-                            alert('Error al guardar en la base de datos: ' + error.message);
-                            return;
-                        }
-
+                        await supabaseClient.from('visits').insert([{
+                            date_str: dateStr, trainer: st.trainer, station_name: `${st.id}. ${st.name}`, type: 'Auditoría', status: 'Programada'
+                        }]);
                         await this.loadVisitsFromSupabase();
-                        alert(`¡Estación #${st.id} (${st.name}) programada manualmente con éxito para el ${dateStr}!`);
-                    } else if (this.calendarMode === 'reprogram') {
-                        if (!this.activeVisitToReprogram) return;
-                        let visit = this.activeVisitToReprogram;
-
-                        let { error } = await supabaseClient.from('visits').update({ date_str: dateStr }).eq('id', visit.id);
-                        if (error) {
-                            alert('Error al reprogramar: ' + error.message);
-                            return;
-                        }
-
+                    } else if (this.calendarMode === 'reprogram' && this.activeVisitToReprogram) {
+                        await supabaseClient.from('visits').update({ date_str: dateStr }).eq('id', this.activeVisitToReprogram.id);
                         await this.loadVisitsFromSupabase();
-                        alert(`Visita a ${visit.stationName} reprogramada exitosamente para el ${dateStr}.`);
                     }
-
                     this.showCalendarModal = false;
                 },
 
                 async saveModalVisit() {
-                    if (this.modalSelectedStationIds.length === 0) {
-                        alert("Por favor seleccione al menos una estación.");
-                        return;
-                    }
-
-                    let targetMonthKey = this.selectedMonth;
-                    let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === this.modalDateStr && v.trainer === this.currentTrainer);
-
-                    if (existingOnDate.length + this.modalSelectedStationIds.length > 4) {
-                        alert(`Límite diario excedido: Ya hay ${existingOnDate.length} estaciones programadas para el ${this.modalDateStr}. El máximo permitido es 4 por día.`);
-                        return;
-                    }
-
-                    let stationsToAdd = [];
-                    let hasDuplicates = false;
-                    let duplicateNames = [];
-
-                    for (let stId of this.modalSelectedStationIds) {
+                    if (this.modalSelectedStationIds.length === 0) return;
+                    let rowsToInsert = this.modalSelectedStationIds.map(stId => {
                         let st = this.stations.find(s => s.id == stId);
-                        if (st) {
-                            let stationNameFull = `${st.id}. ${st.name}`;
-                            stationsToAdd.push(st);
-                            if (this.isStationAlreadyScheduledAnywhere(stationNameFull)) {
-                                hasDuplicates = true;
-                                duplicateNames.push(st.name);
-                            }
-                        }
-                    }
-
-                    if (hasDuplicates) {
-                        if (!confirm(`⚠️ Una o más de las estaciones seleccionadas (${duplicateNames.join(', ')}) ya han sido programadas previamente en el plan. ¿Estás seguro de que deseas programarlas otra vez?`)) {
-                            return;
-                        }
-                    }
-
-                    let newRows = stationsToAdd.map(st => ({
-                        date_str: this.modalDateStr,
-                        trainer: this.currentTrainer,
-                        station_name: `${st.id}. ${st.name}`,
-                        type: this.modalActivityType,
-                        status: 'Programada'
-                    }));
-
-                    let { error } = await supabaseClient.from('visits').insert(newRows);
-                    if (error) {
-                        alert('Error al guardar las visitas: ' + error.message);
-                        return;
-                    }
-
+                        return {
+                            date_str: this.modalDateStr,
+                            trainer: this.currentTrainer,
+                            station_name: `${st.id}. ${st.name}`,
+                            type: 'Auditoría',
+                            status: 'Programada'
+                        };
+                    });
+                    await supabaseClient.from('visits').insert(rowsToInsert);
                     await this.loadVisitsFromSupabase();
-                    alert(`¡Se programaron ${stationsToAdd.length} estación(es) con éxito para el ${this.modalDateStr}!`);
                     this.showModal = false;
-                    this.modalSelectedStationIds = [];
                 },
 
-                openAutoGeneratorModal() {
-                    this.showAutoModal = true;
-                },
-
+                openAutoGeneratorModal() { this.showAutoModal = true; },
                 toggleAutoMonth(mKey) {
                     let idx = this.selectedAutoMonths.indexOf(mKey);
-                    if (idx > -1) {
-                        this.selectedAutoMonths.splice(idx, 1);
-                    } else {
-                        if (this.selectedAutoMonths.length >= 2) {
-                            alert("No se admite generar el orden automático para más de 2 meses simultáneamente.");
-                            return;
-                        }
+                    if (idx > -1) this.selectedAutoMonths.splice(idx, 1);
+                    else {
+                        if (this.selectedAutoMonths.length >= 2) { alert("Máximo 2 meses."); return; }
                         this.selectedAutoMonths.push(mKey);
                     }
                 },
 
                 async executeAutomaticSchedule() {
-                    if (this.selectedAutoMonths.length === 0) {
-                        alert("Por favor seleccione al menos un mes.");
-                        return;
-                    }
-
-                    if (this.selectedAutoMonths.length > 2) {
-                        alert("No se admite orden por más de dos meses.");
-                        return;
-                    }
-
-                    let selectedLabels = this.selectedAutoMonths.map(k => this.monthsConfig[k].label).join(' y ');
-
-                    if (!confirm(`¿Desea generar el orden automático de visitas para (${selectedLabels}) para ${this.currentTrainer}? Esto asignará solo sus estaciones, hasta 3 por día (martes a viernes, sin feriados).`)) {
-                        return;
-                    }
-
                     let trainerStations = this.stations.filter(s => s.trainer === this.currentTrainer);
-                    if (trainerStations.length === 0) {
-                        alert("No hay estaciones asignadas a este capacitador.");
-                        return;
-                    }
-
                     let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
                     let stationIndex = 0;
-                    let assignedCount = 0;
                     let rowsToInsert = [];
 
                     for (let mKey of this.selectedAutoMonths) {
                         let cfg = this.monthsConfig[mKey];
-                        let validDays = [];
                         for (let i = 1; i <= cfg.days; i++) {
-                            let dayNumStr = i < 10 ? '0' + i : '' + i;
-                            let dateStr = `${cfg.prefix}-${dayNumStr}`;
+                            let dateStr = `${cfg.prefix}-${i < 10 ? '0' + i : i}`;
                             let d = new Date(dateStr + 'T00:00:00');
                             let dow = d.getDay();
-
                             if (dow >= 2 && dow <= 5 && !holidays.includes(dateStr)) {
-                                validDays.push(dateStr);
-                            }
-                        }
-
-                        for (let dateStr of validDays) {
-                            let dailyCount = 0;
-                            while (dailyCount < 3 && stationIndex < trainerStations.length) {
-                                let st = trainerStations[stationIndex];
-                                
-                                rowsToInsert.push({
-                                    date_str: dateStr,
-                                    trainer: st.trainer,
-                                    station_name: `${st.id}. ${st.name}`,
-                                    type: 'Auditoría',
-                                    status: 'Programada'
-                                });
-
-                                stationIndex++;
-                                dailyCount++;
-                                assignedCount++;
-
-                                if (stationIndex >= trainerStations.length) {
-                                    stationIndex = 0;
+                                let dailyCount = 0;
+                                while (dailyCount < 3 && stationIndex < trainerStations.length) {
+                                    let st = trainerStations[stationIndex];
+                                    rowsToInsert.push({ date_str: dateStr, trainer: st.trainer, station_name: `${st.id}. ${st.name}`, type: 'Auditoría', status: 'Programada' });
+                                    stationIndex++; dailyCount++;
+                                    if (stationIndex >= trainerStations.length) stationIndex = 0;
                                 }
                             }
                         }
                     }
-
-                    let { error } = await supabaseClient.from('visits').insert(rowsToInsert);
-                    if (error) {
-                        alert('Error al guardar el orden automático: ' + error.message);
-                        return;
-                    }
-
+                    await supabaseClient.from('visits').insert(rowsToInsert);
                     await this.loadVisitsFromSupabase();
                     this.showAutoModal = false;
-                    alert(`¡Orden automático generado y sincronizado con éxito! Se programaron ${assignedCount} visitas para ${this.currentTrainer} en (${selectedLabels}) [máx. 3 por día, martes a viernes, sin feriados].`);
+                    alert("¡Generado y sincronizado con éxito!");
                 },
 
                 async deleteVisit(visit) {
-                    if (confirm(`¿Está seguro de eliminar la programación de ${visit.stationName}?`)) {
-                        let { error } = await supabaseClient.from('visits').delete().eq('id', visit.id);
-                        if (error) {
-                            alert('Error al eliminar la visita: ' + error.message);
-                            return;
-                        }
+                    if (confirm(`¿Eliminar ${visit.stationName}?`)) {
+                        await supabaseClient.from('visits').delete().eq('id', visit.id);
                         await this.loadVisitsFromSupabase();
                     }
                 },
 
                 exportToGoogleCalendarICS() {
                     let activeVisits = this.getTrainerVisits();
-                    if (activeVisits.length === 0) {
-                        alert("No hay visitas programadas en el mes activo para exportar a Google Calendar.");
-                        return;
-                    }
-
-                    let icsLines = [
-                        "BEGIN:VCALENDAR",
-                        "VERSION:2.0",
-                        "PRODID:-//Puma Energy Panama//Planificador Operativo//ES",
-                        "CALSCALE:GREGORIAN",
-                        "METHOD:PUBLISH"
-                    ];
-
+                    let icsLines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Puma//ES"];
                     activeVisits.forEach(v => {
                         let cleanDate = v.dateStr.replace(/-/g, "");
-                        let title = `Visita Puma: ${v.stationName} (${v.type})`;
-                        let description = `Visita operativa y capacitación asignada a ${v.trainer}. Tipo: ${v.type}.`;
-                        
-                        icsLines.push("BEGIN:VEVENT");
-                        icsLines.push(`SUMMARY:${title}`);
-                        icsLines.push(`DESCRIPTION:${description}`);
-                        icsLines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
-                        icsLines.push(`DTEND;VALUE=DATE:${cleanDate}`);
-                        icsLines.push("STATUS:CONFIRMED");
-                        icsLines.push("END:VEVENT");
+                        icsLines.push("BEGIN:VEVENT", `SUMMARY:Visita Puma: ${v.stationName}`, `DTSTART;VALUE=DATE:${cleanDate}`, `DTEND;VALUE=DATE:${cleanDate}`, "END:VEVENT");
                     });
-
                     icsLines.push("END:VCALENDAR");
-
-                    let icsContent = icsLines.join("\r\n");
-                    let blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+                    let blob = new Blob([icsLines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
                     let link = document.createElement("a");
                     link.href = window.URL.createObjectURL(blob);
-                    link.setAttribute("download", `Visitas_Puma_${this.currentTrainer.replace(/ /g, "_")}_${this.selectedMonthShortName}.ics`);
-                    document.body.appendChild(link);
+                    link.download = `Visitas_Puma_${this.selectedMonthShortName}.ics`;
                     link.click();
-                    document.body.removeChild(link);
-
-                    alert("¡Archivo .ics generado exitosamente! Al abrirlo se importará automáticamente en Google Calendar.");
                 },
 
-                openSingleGoogleCalendarLink(visit) {
-                    let dateClean = visit.dateStr.replace(/-/g, "");
-                    let title = encodeURIComponent(`Visita Puma: ${visit.stationName}`);
-                    let details = encodeURIComponent(`Capacitador: ${visit.trainer}\nTipo de actividad: ${visit.type}`);
-                    let location = encodeURIComponent(`Estación Puma Energy ${visit.stationName}`);
-                    
-                    let gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateClean}/${dateClean}&details=${details}&location=${location}`;
-                    window.open(gCalUrl, '_blank');
-                },
-
-                exportMonthPDF() {
-                    window.print();
-                }
+                exportMonthPDF() { window.print(); }
             };
         }
     </script>
