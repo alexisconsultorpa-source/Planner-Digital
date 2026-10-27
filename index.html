@@ -160,7 +160,7 @@
 
         </div>
 
-        <!-- Tarjetas de Métricas (Solo 2 recuadros) -->
+        <!-- Tarjetas de Métricas -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-slate-800 card-print">
                 <p class="text-xs font-bold text-slate-500 uppercase">Capacitador Asignado</p>
@@ -229,7 +229,7 @@
                                         <span class="truncate" x-text="visit.stationName"></span>
                                         <span class="text-[8px] px-0.5 rounded text-white bg-[#00875A]">OK</span>
                                     </div>
-                                    <!-- Botones de Acción e Integración directa con Google Calendar -->
+                                    <!-- Botones de Acción -->
                                     <div class="grid grid-cols-3 gap-0.5 pt-0.5 border-t border-slate-200 text-[8px] text-center no-print">
                                         <button @click.stop="openSingleGoogleCalendarLink(visit)" class="text-blue-700 font-bold hover:underline" title="Agregar a Google Calendar">📅 GCal</button>
                                         <button @click.stop="openCalendarPickerForReprogram(visit)" class="text-slate-700 font-bold hover:underline">Reprog.</button>
@@ -421,9 +421,9 @@
 
     <!-- Script de la aplicación con Supabase Cloud Sync -->
     <script>
-        // Configuración de Supabase con tus credenciales
+        // Configuración de Supabase con tus credenciales reales
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UI...'; // Reemplaza con tu llave anon completa si es necesario
+        const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function pumaPlanner() {
@@ -464,11 +464,10 @@
                             return;
                         }
                         
-                        // Limpiar y reorganizar por meses según la fecha guardada
                         let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
                         
                         data.forEach(item => {
-                            let prefix = item.date_str.substring(0, 7); // Ej: "2026-10"
+                            let prefix = item.date_str.substring(0, 7);
                             let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
                             if (mKey) {
                                 tempVisits[mKey].push({
@@ -728,7 +727,6 @@
                             return;
                         }
 
-                        // Guardar en Supabase
                         let { data, error } = await supabaseClient.from('visits').insert([{
                             date_str: dateStr,
                             trainer: st.trainer,
@@ -748,7 +746,6 @@
                         if (!this.activeVisitToReprogram) return;
                         let visit = this.activeVisitToReprogram;
 
-                        // Actualizar en Supabase
                         let { error } = await supabaseClient.from('visits').update({ date_str: dateStr }).eq('id', visit.id);
                         if (error) {
                             alert('Error al reprogramar: ' + error.message);
@@ -798,7 +795,6 @@
                         }
                     }
 
-                    // Preparar registros para Supabase
                     let newRows = stationsToAdd.map(st => ({
                         date_str: this.modalDateStr,
                         trainer: this.currentTrainer,
@@ -902,7 +898,6 @@
                         }
                     }
 
-                    // Guardar todas las automáticas en Supabase
                     let { error } = await supabaseClient.from('visits').insert(rowsToInsert);
                     if (error) {
                         alert('Error al guardar el orden automático: ' + error.message);
@@ -925,7 +920,6 @@
                     }
                 },
 
-                // EXPORTACIÓN A GOOGLE CALENDAR (Archivo .ics descargable para sincronizar todo el mes)
                 exportToGoogleCalendarICS() {
                     let activeVisits = this.getTrainerVisits();
                     if (activeVisits.length === 0) {
@@ -969,7 +963,6 @@
                     alert("¡Archivo .ics generado exitosamente! Al abrirlo se importará automáticamente en Google Calendar.");
                 },
 
-                // ENLACE DIRECTO INDIVIDUAL A GOOGLE CALENDAR
                 openSingleGoogleCalendarLink(visit) {
                     let dateClean = visit.dateStr.replace(/-/g, "");
                     let title = encodeURIComponent(`Visita Puma: ${visit.stationName}`);
