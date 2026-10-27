@@ -71,7 +71,7 @@
             <div class="flex items-center gap-4">
                 <!-- Indicador de Modo de Acceso -->
                 <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl flex items-center space-x-2 border border-white/20 text-xs">
-                    <span x-text="isUnlocked ? '🔓 Modo Edición (Capacitador)' : '🔒 Modo Solo Lectura (Público)'" :class="isUnlocked ? 'text-emerald-300 font-bold' : 'text-amber-200'"></span>
+                    <span x-text="isUnlocked ? '🔓 Modo Edición (Capacitador)' : '🔒'" :class="isUnlocked ? 'text-emerald-300 font-bold' : 'text-amber-200'"></span>
                     <button @click="toggleAuth()" class="bg-white text-slate-900 px-2.5 py-1 rounded font-bold text-[11px] shadow hover:bg-slate-100 transition cursor-pointer" x-text="isUnlocked ? 'Bloquear' : '🔑 Acceso Capacitador'"></button>
                 </div>
 
