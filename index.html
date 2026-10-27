@@ -377,20 +377,27 @@
         </div>
     </div>
 
-    <!-- Modal de Programación Manual -->
+    <!-- Modal de Programación Manual con Selección Múltiple (Hasta 3 estaciones) -->
     <div x-show="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-xl">
-            <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visita Manual para el ' + modalDateLabel"></h3>
-            <p class="text-xs text-slate-500">Límite manual: <span class="font-bold text-red-600">máximo 4 estaciones por día</span> para <span class="font-bold text-slate-700" x-text="currentTrainer"></span>.</p>
+            <h3 class="text-base font-bold text-slate-800" x-text="'Programar Visitas para el ' + modalDateLabel"></h3>
+            <div class="flex justify-between items-center text-xs">
+                <p class="text-slate-500">Selecciona <span class="font-bold text-red-600">hasta 3 estaciones</span> a la vez.</p>
+                <span class="font-bold text-red-600 px-2 py-0.5 bg-red-50 rounded border border-red-200" x-text="modalSelectedStationIds.length + '/3 seleccionadas'"></span>
+            </div>
             
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700">Estación:</label>
-                <select x-model="modalSelectedStationId" class="w-full border rounded-lg p-2 text-xs bg-white">
-                    <option value="">-- Seleccione una estación --</option>
+                <label class="text-xs font-bold text-slate-700">Listado de Estaciones (<span x-text="currentTrainer"></span>):</label>
+                <div class="border rounded-xl max-h-52 overflow-y-auto p-2 space-y-1 bg-slate-50">
                     <template x-for="st in getTrainerStations()" :key="st.id">
-                        <option :value="st.id" x-text="st.id + '. ' + st.name"></option>
+                        <label class="flex items-center space-x-2.5 p-1.5 hover:bg-white rounded-lg cursor-pointer text-xs transition border border-transparent hover:border-slate-200">
+                            <input type="checkbox" :value="st.id" x-model="modalSelectedStationIds" 
+                                   @change="checkStationSelectionLimit($event)"
+                                   class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                            <span x-text="st.id + '. ' + st.name" class="font-medium text-slate-800"></span>
+                        </label>
                     </template>
-                </select>
+                </div>
             </div>
 
             <div class="space-y-2">
@@ -403,14 +410,14 @@
                 </select>
             </div>
 
-            <div class="flex justify-end space-x-2 pt-3">
+            <div class="flex justify-end space-x-2 pt-3 border-t">
                 <button @click="showModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-300 transition">Cancelar</button>
-                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Guardar Visita Manual</button>
+                <button @click="saveModalVisit()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition">Guardar Visitas Seleccionadas</button>
             </div>
         </div>
     </div>
 
-    <!-- Script de la aplicación con Funciones de Integración a Google Calendar -->
+    <!-- Script de la aplicación con Múltiple Selección y Validación de Repetición -->
     <script>
         function pumaPlanner() {
             return {
@@ -426,7 +433,7 @@
                 activeVisitToReprogram: null,
                 modalDateStr: '',
                 modalDateLabel: '',
-                modalSelectedStationId: '',
+                modalSelectedStationIds: [],
                 modalActivityType: 'Auditoría',
                 selectedAutoMonths: ['current', 'p1'],
 
@@ -592,6 +599,14 @@
                     return monthVisits.filter(v => v.trainer === this.currentTrainer);
                 },
 
+                isStationAlreadyScheduledAnywhere(stationNameFull) {
+                    for (let mKey in this.visits) {
+                        let found = this.visits[mKey].find(v => v.stationName === stationNameFull && v.trainer === this.currentTrainer);
+                        if (found) return true;
+                    }
+                    return false;
+                },
+
                 getMonthCalendarDays() {
                     let currentCfg = this.monthsConfig[this.selectedMonth] || this.monthsConfig['current'];
                     let list = [];
@@ -626,11 +641,25 @@
                 openScheduleModalFromCalendar(dayObj) {
                     this.modalDateStr = dayObj.dateStr;
                     this.modalDateLabel = `${dayObj.dayName} ${dayObj.dayNum} (${this.selectedMonthLabel})`;
-                    this.modalSelectedStationId = '';
+                    this.modalSelectedStationIds = [];
                     this.showModal = true;
                 },
 
+                checkStationSelectionLimit(event) {
+                    if (this.modalSelectedStationIds.length > 3) {
+                        alert("Solo puedes seleccionar un máximo de 3 estaciones a la vez.");
+                        this.modalSelectedStationIds.pop();
+                    }
+                },
+
                 openCalendarPickerForStation(st) {
+                    let stationNameFull = `${st.id}. ${st.name}`;
+                    if (this.isStationAlreadyScheduledAnywhere(stationNameFull)) {
+                        if (!confirm(`⚠️ La estación "${st.name}" ya ha sido programada previamente en el plan. ¿Estás seguro de que deseas programar esta estación otra vez?`)) {
+                            return;
+                        }
+                    }
+
                     this.activeStationToSchedule = st;
                     this.activeVisitToReprogram = null;
                     this.calendarMode = 'schedule';
@@ -684,35 +713,59 @@
                 },
 
                 saveModalVisit() {
-                    if (!this.modalSelectedStationId) {
-                        alert("Por favor seleccione una estación.");
+                    if (this.modalSelectedStationIds.length === 0) {
+                        alert("Por favor seleccione al menos una estación.");
                         return;
                     }
-                    let st = this.stations.find(s => s.id == this.modalSelectedStationId);
-                    if (!st) return;
 
                     let targetMonthKey = this.selectedMonth;
-
                     let existingOnDate = (this.visits[targetMonthKey] || []).filter(v => v.dateStr === this.modalDateStr && v.trainer === this.currentTrainer);
-                    if (existingOnDate.length >= 4) {
-                        alert(`Límite alcanzado: Ya hay 4 estaciones programadas para ${this.currentTrainer} el ${this.modalDateStr}. (Máximo manual: 4)`);
+
+                    if (existingOnDate.length + this.modalSelectedStationIds.length > 4) {
+                        alert(`Límite diario excedido: Ya hay ${existingOnDate.length} estaciones programadas para el ${this.modalDateStr}. El máximo permitido es 4 por día.`);
                         return;
+                    }
+
+                    let stationsToAdd = [];
+                    let hasDuplicates = false;
+                    let duplicateNames = [];
+
+                    for (let stId of this.modalSelectedStationIds) {
+                        let st = this.stations.find(s => s.id == stId);
+                        if (st) {
+                            let stationNameFull = `${st.id}. ${st.name}`;
+                            stationsToAdd.push(st);
+                            if (this.isStationAlreadyScheduledAnywhere(stationNameFull)) {
+                                hasDuplicates = true;
+                                duplicateNames.push(st.name);
+                            }
+                        }
+                    }
+
+                    if (hasDuplicates) {
+                        if (!confirm(`⚠️ Una o más de las estaciones seleccionadas (${duplicateNames.join(', ')}) ya han sido programadas previamente en el plan. ¿Estás seguro de que deseas programarlas otra vez?`)) {
+                            return;
+                        }
                     }
 
                     if (!this.visits[targetMonthKey]) {
                         this.visits[targetMonthKey] = [];
                     }
 
-                    this.visits[targetMonthKey].push({
-                        id: Date.now() + Math.floor(Math.random()*1000),
-                        dateStr: this.modalDateStr,
-                        trainer: this.currentTrainer,
-                        stationName: `${st.id}. ${st.name}`,
-                        type: this.modalActivityType,
-                        status: 'Programada'
+                    stationsToAdd.forEach(st => {
+                        this.visits[targetMonthKey].push({
+                            id: Date.now() + Math.floor(Math.random()*10000),
+                            dateStr: this.modalDateStr,
+                            trainer: this.currentTrainer,
+                            stationName: `${st.id}. ${st.name}`,
+                            type: this.modalActivityType,
+                            status: 'Programada'
+                        });
                     });
 
+                    alert(`¡Se programaron ${stationsToAdd.length} estación(es) con éxito para el ${this.modalDateStr}!`);
                     this.showModal = false;
+                    this.modalSelectedStationIds = [];
                 },
 
                 openAutoGeneratorModal() {
