@@ -81,7 +81,7 @@
                     <div>
                         <div class="flex items-center space-x-2">
                             <span class="text-[10px] uppercase text-red-200 font-bold">Capacitador:</span>
-                            <select x-model="currentTrainer" class="bg-white text-slate-900 text-xs font-bold rounded px-1 py-0.5 outline-none cursor-pointer">
+                            <select x-model="currentTrainer" @change="loadDayNotesFromSupabase()" class="bg-white text-slate-900 text-xs font-bold rounded px-1 py-0.5 outline-none cursor-pointer">
                                 <option value="Alexis León">Alexis León</option>
                                 <option value="Gabriel Vergara">Gabriel Vergara</option>
                             </select>
@@ -155,7 +155,7 @@
             <div class="bg-white p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 card-print">
                 <div>
                     <h3 class="text-base font-bold text-slate-800" x-text="'Reporte Mensual de Visitas - ' + selectedMonthLabel"></h3>
-                    <p class="text-xs text-slate-500" x-text="isUnlocked ? 'Modo Edición activo: Haz clic en un día para programar o escribe notas.' : 'Modo Solo Lectura: Puedes consultar la programación y notas libremente.'"></p>
+                    <p class="text-xs text-slate-500" x-text="'Notas e incidencias independientes para: ' + currentTrainer"></p>
                 </div>
             </div>
 
@@ -205,13 +205,13 @@
                             </template>
                         </div>
 
-                        <!-- Sección de Comentario / Incidencia del Día -->
+                        <!-- Sección de Comentario / Incidencia del Día (Filtrada por Capacitador) -->
                         <div class="mt-1 pt-1 border-t border-dashed border-slate-200">
                             <input type="text" 
                                    :value="getDayComment(dayObj.dateStr)" 
                                    @change="saveDayComment(dayObj.dateStr, $event.target.value)"
                                    :disabled="!isUnlocked"
-                                   placeholder="💬 Nota / Incidencia..." 
+                                   :placeholder="'💬 Nota de ' + currentTrainer.split(' ')[0] + '...'" 
                                    class="w-full text-[9px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 outline-none focus:border-red-500 disabled:bg-slate-100 disabled:text-slate-500">
                         </div>
 
@@ -220,15 +220,14 @@
             </div>
         </div>
 
-        <!-- VISTA 2: DIRECTORIO DE ESTACIONES Y NUEVA ESTACIÓN -->
+        <!-- VISTA 2: DIRECTORIO DE ESTACIONES -->
         <div x-show="activeTab === 'directory'" class="bg-white rounded-xl shadow-sm p-6 space-y-4 card-print">
             <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-800">Maestro de Estaciones (Orden Alfabético A-Z)</h3>
-                    <p class="text-xs text-slate-500">Programación individual, automática o adición de nuevas estaciones.</p>
+                    <p class="text-xs text-slate-500">Gestión de estaciones y rutas.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 no-print">
-                    <!-- Botón para Agregar Nueva Estación (Solo Capacitadores) -->
                     <button x-show="isUnlocked" @click="openAddStationModal()" class="puma-green text-white px-3 py-2 rounded-lg text-xs font-bold shadow hover:opacity-95 transition cursor-pointer flex items-center space-x-1">
                         <span>➕ Nueva Estación</span>
                     </button>
@@ -310,7 +309,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONTRASEÑA PARA ACCESO DE CAPACITADOR -->
+    <!-- MODAL DE CONTRASEÑA -->
     <div x-show="showAuthModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -402,7 +401,7 @@
         </div>
     </div>
 
-    <!-- Script Principal con Supabase -->
+    <!-- Script Principal con Supabase y Notas Separadas por Capacitador -->
     <script>
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
@@ -452,7 +451,7 @@
                 },
 
                 visits: { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] },
-                dayNotes: {},
+                dayNotes: {}, // Almacén local de notas cargadas para el capacitador activo
 
                 toggleAuth() {
                     if (this.isUnlocked) {
@@ -574,7 +573,6 @@
                 async loadStationsFromSupabase() {
                     let { data, error } = await supabaseClient.from('stations').select('*');
                     if (!error && data && data.length > 0) {
-                        // Combinamos las bases o usamos las de Supabase si ya hay personalizadas
                         let existingIds = this.stations.map(s => s.id);
                         data.forEach(st => {
                             if (!existingIds.includes(st.id)) {
@@ -651,7 +649,8 @@
                 },
 
                 async loadDayNotesFromSupabase() {
-                    let { data, error } = await supabaseClient.from('day_notes').select('*');
+                    // Cargamos solo las notas correspondientes al capacitador activo actual
+                    let { data, error } = await supabaseClient.from('day_notes').select('*').eq('trainer', this.currentTrainer);
                     if (error) return;
                     let notesMap = {};
                     if (data) {
@@ -667,11 +666,17 @@
                 async saveDayComment(dateStr, commentText) {
                     if (!this.isUnlocked) return;
                     this.dayNotes[dateStr] = commentText;
-                    await supabaseClient.from('day_notes').upsert({
+                    
+                    // Guardamos vinculando la fecha, el comentario y el capacitador activo
+                    let { error } = await supabaseClient.from('day_notes').upsert({
                         date_str: dateStr,
-                        comment: commentText,
-                        trainer: this.currentTrainer
-                    }, { onConflict: 'date_str' });
+                        trainer: this.currentTrainer,
+                        comment: commentText
+                    }, { onConflict: 'date_str, trainer' });
+
+                    if (error) {
+                        console.error("Error guardando nota:", error.message);
+                    }
                 },
 
                 get trainerInitials() { return this.currentTrainer.split(' ').map(n => n[0]).join(''); },
