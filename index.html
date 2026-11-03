@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide leading-none">PLANIFICADOR OPERATIVO DE CAPACITACIONES</h1>
-                    <p class="text-xs opacity-90 mt-1">Control de Rutas, Estaciones y Calendario Interactivo</p>
+                    <p class="text-xs opacity-90 mt-1">Control de Rutas, Estaciones y Calendario Interactivo Anual</p>
                 </div>
             </div>
 
@@ -96,36 +96,48 @@
     <!-- Contenedor Principal -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6 print-container">
 
-        <!-- Banner de Perfil y Selector Navegable de 5 Meses -->
+        <!-- Banner de Perfil y Selector Navegable Anual (12 Meses) -->
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-center gap-4">
             
             <div class="flex items-center space-x-3">
                 <div class="p-3 puma-red text-white rounded-xl font-bold text-center min-w-[70px]">
                     <span class="text-xs block uppercase">Mes</span>
-                    <span class="text-lg font-black uppercase" x-text="selectedMonthShortName">OCT</span>
+                    <span class="text-lg font-black uppercase" x-text="selectedMonthShortName">NOV</span>
                 </div>
                 <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Planificación Multimes</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Planificación Anual <span x-text="selectedYear"></span></span>
                     <h2 class="text-xl font-black text-slate-800" x-text="'Plan de Visitas: ' + currentTrainer"></h2>
-                    <p class="text-xs text-slate-500" x-text="'Agenda mensual ajustada a 1 página (8.5x11 pulgadas) - ' + selectedMonthLabel"></p>
+                    <p class="text-xs text-slate-500" x-text="'Agenda mensual - ' + selectedMonthLabel"></p>
                 </div>
             </div>
 
-            <!-- Navegador de 5 Meses + Botones de Exportación -->
-            <div class="flex flex-wrap items-center justify-center gap-1.5 no-print">
-                <button @click="selectMonth('m-2')" :class="selectedMonth === 'm-2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Agosto</button>
-                <button @click="selectMonth('m-1')" :class="selectedMonth === 'm-1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Septiembre</button>
-                <button @click="selectMonth('current')" :class="selectedMonth === 'current' ? 'puma-red text-white shadow ring-2 ring-red-400' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-3 py-1.5 rounded-lg text-xs font-black transition">📌 Octubre (Actual)</button>
-                <button @click="selectMonth('p1')" :class="selectedMonth === 'p1' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Noviembre</button>
-                <button @click="selectMonth('p2')" :class="selectedMonth === 'p2' ? 'puma-red text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Diciembre</button>
+            <!-- Selector de 12 Meses con Indicación del Mes Actual Real -->
+            <div class="flex flex-col items-center gap-2 no-print">
+                <div class="flex flex-wrap items-center justify-center gap-1">
+                    <template x-for="(cfg, mIdx) in allMonthsConfig" :key="mIdx">
+                        <button @click="selectMonthByIdx(mIdx)" 
+                                :class="{
+                                    'puma-red text-white shadow ring-2 ring-red-400 font-black': selectedMonthIdx === mIdx,
+                                    'bg-amber-100 text-amber-900 font-bold border border-amber-300': currentRealMonthIdx === mIdx && selectedMonthIdx !== mIdx,
+                                    'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold': selectedMonthIdx !== mIdx && currentRealMonthIdx !== mIdx
+                                }" 
+                                class="px-2 py-1 rounded-lg text-xs transition relative">
+                            <span x-text="cfg.short"></span>
+                            <template x-if="currentRealMonthIdx === mIdx">
+                                <span class="text-[8px] block leading-none font-bold text-amber-800">Actual</span>
+                            </template>
+                        </button>
+                    </template>
+                </div>
 
-                <button @click="exportToGoogleCalendarICS()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-blue-700 transition ml-2 flex items-center space-x-1 cursor-pointer">
-                    <span>📅 Exportar GCal (.ics)</span>
-                </button>
-
-                <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
-                    <span>📄 PDF (1 pág)</span>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <button @click="exportToGoogleCalendarICS()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:bg-blue-700 transition flex items-center space-x-1 cursor-pointer">
+                        <span>📅 Exportar GCal (.ics)</span>
+                    </button>
+                    <button @click="exportMonthPDF()" class="puma-green text-white px-3 py-1 rounded-lg text-xs font-bold shadow hover:opacity-90 transition">
+                        <span>📄 PDF (1 pág)</span>
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -205,7 +217,7 @@
                             </template>
                         </div>
 
-                        <!-- Sección de Comentario / Incidencia del Día (Filtrada por Capacitador) -->
+                        <!-- Sección de Comentario / Incidencia del Día -->
                         <div class="mt-1 pt-1 border-t border-dashed border-slate-200">
                             <input type="text" 
                                    :value="getDayComment(dayObj.dateStr)" 
@@ -309,6 +321,44 @@
         </div>
     </div>
 
+    <!-- MODAL DE SELECCIÓN DE DÍA PARA PROGRAMAR O REPROGRAMAR (CON NAVEGACIÓN DE MESES) -->
+    <div x-show="showCalendarModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
+        <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
+                    <p class="text-xs text-slate-500" x-text="'Selecciona el día en ' + pickerMonthLabel"></p>
+                </div>
+                <button @click="showCalendarModal = false" class="text-slate-400 font-bold text-lg">✕</button>
+            </div>
+
+            <!-- Navegador de Meses dentro del Modal -->
+            <div class="flex justify-between items-center bg-slate-100 p-2 rounded-xl text-xs font-bold">
+                <button @click="navigatePickerMonth(-1)" class="px-2.5 py-1 bg-white rounded shadow hover:bg-slate-200 cursor-pointer">◀ Mes Ant.</button>
+                <span class="text-slate-800" x-text="pickerMonthLabel"></span>
+                <button @click="navigatePickerMonth(1)" class="px-2.5 py-1 bg-white rounded shadow hover:bg-slate-200 cursor-pointer">Sig. Mes ▶</button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
+                <template x-for="dayObj in getPickerCalendarDays()" :key="dayObj.dateStr">
+                    <div @click="handleCalendarDateSelection(dayObj.dateStr)"
+                         class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center hover:border-red-600 hover:bg-red-50"
+                         :class="{
+                             'bg-amber-50 border-amber-200 text-amber-900': dayObj.isWeekend,
+                             'bg-red-50 border-red-200 text-red-900': dayObj.isHoliday,
+                             'bg-white border-slate-200 text-slate-800': !dayObj.isWeekend && !dayObj.isHoliday
+                         }">
+                        <span class="text-[9px] uppercase font-bold text-slate-400" x-text="dayObj.dayName"></span>
+                        <span class="text-sm font-black" x-text="dayObj.dayNum"></span>
+                    </div>
+                </template>
+            </div>
+            <div class="flex justify-end pt-2 border-t">
+                <button @click="showCalendarModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CONTRASEÑA -->
     <div x-show="showAuthModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
@@ -325,7 +375,7 @@
         </div>
     </div>
 
-    <!-- Modales de Operación -->
+    <!-- Modales de Generación Automática y Selección Múltiple -->
     <div x-show="showAutoModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
         <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -333,13 +383,13 @@
                 <button @click="showAutoModal = false" class="text-slate-400 font-bold text-lg">✕</button>
             </div>
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700">Seleccione los meses (máximo 2):</label>
-                <div class="grid grid-cols-1 gap-2">
-                    <template x-for="(cfg, mKey) in monthsConfig" :key="mKey">
-                        <label class="flex items-center space-x-3 p-2.5 rounded-lg border cursor-pointer hover:bg-slate-50 transition"
-                               :class="selectedAutoMonths.includes(mKey) ? 'border-red-500 bg-red-50/50' : 'border-slate-200'">
-                            <input type="checkbox" :value="mKey" @change="toggleAutoMonth(mKey)" :checked="selectedAutoMonths.includes(mKey)" class="w-4 h-4 text-red-600 rounded">
-                            <span class="text-xs font-bold text-slate-800" x-text="cfg.label"></span>
+                <label class="text-xs font-bold text-slate-700">Seleccione los meses a programar (máximo 2):</label>
+                <div class="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto p-1">
+                    <template x-for="(cfg, mIdx) in allMonthsConfig" :key="mIdx">
+                        <label class="flex items-center space-x-2 p-2 rounded-lg border cursor-pointer hover:bg-slate-50 transition text-xs"
+                               :class="selectedAutoMonthsIdx.includes(mIdx) ? 'border-red-500 bg-red-50/50 font-bold' : 'border-slate-200'">
+                            <input type="checkbox" :value="mIdx" @change="toggleAutoMonthIdx(mIdx)" :checked="selectedAutoMonthsIdx.includes(mIdx)" class="w-4 h-4 text-red-600 rounded">
+                            <span x-text="cfg.label"></span>
                         </label>
                     </template>
                 </div>
@@ -347,32 +397,6 @@
             <div class="flex justify-end space-x-2 pt-3 border-t">
                 <button @click="showAutoModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cancelar</button>
                 <button @click="executeAutomaticSchedule()" class="puma-red text-white px-4 py-2 rounded-lg text-xs font-bold shadow">Ejecutar</button>
-            </div>
-        </div>
-    </div>
-
-    <div x-show="showCalendarModal && isUnlocked" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print" x-cloak>
-        <div class="bg-white rounded-2xl p-6 max-w-xl w-full space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-base font-bold text-slate-800" x-text="calendarModalTitle"></h3>
-                <button @click="showCalendarModal = false" class="text-slate-400 font-bold text-lg">✕</button>
-            </div>
-            <div class="grid grid-cols-7 gap-2 max-h-[350px] overflow-y-auto p-1">
-                <template x-for="dayObj in getMonthCalendarDays()" :key="dayObj.dateStr">
-                    <div @click="handleCalendarDateSelection(dayObj.dateStr)"
-                         class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center hover:border-red-600 hover:bg-red-50"
-                         :class="{
-                             'bg-amber-50 border-amber-200 text-amber-900': dayObj.isWeekend,
-                             'bg-red-50 border-red-200 text-red-900': dayObj.isHoliday,
-                             'bg-white border-slate-200 text-slate-800': !dayObj.isWeekend && !dayObj.isHoliday
-                         }">
-                        <span class="text-[9px] uppercase font-bold text-slate-400" x-text="dayObj.dayName"></span>
-                        <span class="text-sm font-black" x-text="dayObj.dayNum"></span>
-                    </div>
-                </template>
-            </div>
-            <div class="flex justify-end pt-2 border-t">
-                <button @click="showCalendarModal = false" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Cerrar</button>
             </div>
         </div>
     </div>
@@ -401,7 +425,7 @@
         </div>
     </div>
 
-    <!-- Script Principal con Supabase y Notas Separadas por Capacitador -->
+    <!-- Script Principal Anual con Supabase -->
     <script>
         const SUPABASE_URL = 'https://bvnsepupghgluqnhrdgl.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_-B-Lck4vqjF0eLf0UlXJzQ_jOhPg_XH';
@@ -411,7 +435,6 @@
             return {
                 activeTab: 'calendar',
                 currentTrainer: 'Alexis León',
-                selectedMonth: 'current',
                 searchQuery: '',
                 
                 isUnlocked: false,
@@ -434,24 +457,58 @@
                 modalDateStr: '',
                 modalDateLabel: '',
                 modalSelectedStationIds: [],
-                selectedAutoMonths: ['current', 'p1'],
 
-                monthsConfig: {
-                    'm-2': { name: 'AGO', label: 'Agosto 2026', prefix: '2026-08', days: 31 },
-                    'm-1': { name: 'SEP', label: 'Septiembre 2026', prefix: '2026-09', days: 30 },
-                    'current': { name: 'OCT', label: 'Octubre 2026', prefix: '2026-10', days: 31 },
-                    'p1': { name: 'NOV', label: 'Noviembre 2026', prefix: '2026-11', days: 30 },
-                    'p2': { name: 'DIC', label: 'Diciembre 2026', prefix: '2026-12', days: 31 }
-                },
+                // Configuración Dinámica Anual (12 Meses)
+                selectedYear: new Date().getFullYear(),
+                selectedMonthIdx: new Date().getMonth(), // Activo por defecto en el mes actual del sistema
+                currentRealMonthIdx: new Date().getMonth(),
+                pickerMonthIdx: new Date().getMonth(), // Control del mes abierto en el modal de reprogramación/programación
+                selectedAutoMonthsIdx: [],
+
+                allMonthsConfig: [
+                    { name: 'ENE', short: 'Ene', label: 'Enero', monthNum: '01', days: 31 },
+                    { name: 'FEB', short: 'Feb', label: 'Febrero', monthNum: '02', days: 28 },
+                    { name: 'MAR', short: 'Mar', label: 'Marzo', monthNum: '03', days: 31 },
+                    { name: 'ABR', short: 'Abr', label: 'Abril', monthNum: '04', days: 30 },
+                    { name: 'MAY', short: 'May', label: 'Mayo', monthNum: '05', days: 31 },
+                    { name: 'JUN', short: 'Jun', label: 'Junio', monthNum: '06', days: 30 },
+                    { name: 'JUL', short: 'Jul', label: 'Julio', monthNum: '07', days: 31 },
+                    { name: 'AGO', short: 'Ago', label: 'Agosto', monthNum: '08', days: 31 },
+                    { name: 'SEP', short: 'Sep', label: 'Septiembre', monthNum: '09', days: 30 },
+                    { name: 'OCT', short: 'Oct', label: 'Octubre', monthNum: '10', days: 31 },
+                    { name: 'NOV', short: 'Nov', label: 'Noviembre', monthNum: '11', days: 30 },
+                    { name: 'DIC', short: 'Dic', label: 'Diciembre', monthNum: '12', days: 31 }
+                ],
 
                 async init() {
+                    this.adjustLeapYear();
+                    this.selectedAutoMonthsIdx = [this.selectedMonthIdx, (this.selectedMonthIdx + 1) % 12];
                     await this.loadStationsFromSupabase();
                     await this.loadVisitsFromSupabase();
                     await this.loadDayNotesFromSupabase();
                 },
 
-                visits: { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] },
-                dayNotes: {}, // Almacén local de notas cargadas para el capacitador activo
+                adjustLeapYear() {
+                    let year = this.selectedYear;
+                    let isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+                    this.allMonthsConfig[1].days = isLeap ? 29 : 28;
+                },
+
+                visits: {}, // Organizado por "YYYY-MM"
+                dayNotes: {},
+
+                selectMonthByIdx(idx) {
+                    this.selectedMonthIdx = idx;
+                },
+
+                get currentMonthConfig() { return this.allMonthsConfig[this.selectedMonthIdx]; },
+                get selectedMonthShortName() { return this.currentMonthConfig.name; },
+                get selectedMonthLabel() { return `${this.currentMonthConfig.label} ${this.selectedYear}`; },
+                get currentMonthPrefix() { return `${this.selectedYear}-${this.currentMonthConfig.monthNum}`; },
+                get pickerMonthLabel() { 
+                    let cfg = this.allMonthsConfig[this.pickerMonthIdx];
+                    return `${cfg.label} ${this.selectedYear}`; 
+                },
 
                 toggleAuth() {
                     if (this.isUnlocked) {
@@ -630,26 +687,23 @@
                 async loadVisitsFromSupabase() {
                     let { data, error } = await supabaseClient.from('visits').select('*');
                     if (error) return;
-                    let tempVisits = { 'm-2': [], 'm-1': [], 'current': [], 'p1': [], 'p2': [] };
+                    let tempVisits = {};
                     data.forEach(item => {
-                        let prefix = item.date_str.substring(0, 7);
-                        let mKey = Object.keys(this.monthsConfig).find(k => this.monthsConfig[k].prefix === prefix);
-                        if (mKey) {
-                            tempVisits[mKey].push({
-                                id: item.id,
-                                dateStr: item.date_str,
-                                trainer: item.trainer,
-                                stationName: item.station_name,
-                                type: item.type,
-                                status: item.status
-                            });
-                        }
+                        let prefix = item.date_str.substring(0, 7); // YYYY-MM
+                        if (!tempVisits[prefix]) tempVisits[prefix] = [];
+                        tempVisits[prefix].push({
+                            id: item.id,
+                            dateStr: item.date_str,
+                            trainer: item.trainer,
+                            stationName: item.station_name,
+                            type: item.type,
+                            status: item.status
+                        });
                     });
                     this.visits = tempVisits;
                 },
 
                 async loadDayNotesFromSupabase() {
-                    // Cargamos solo las notas correspondientes al capacitador activo actual
                     let { data, error } = await supabaseClient.from('day_notes').select('*').eq('trainer', this.currentTrainer);
                     if (error) return;
                     let notesMap = {};
@@ -666,8 +720,6 @@
                 async saveDayComment(dateStr, commentText) {
                     if (!this.isUnlocked) return;
                     this.dayNotes[dateStr] = commentText;
-                    
-                    // Guardamos vinculando la fecha, el comentario y el capacitador activo
                     let { error } = await supabaseClient.from('day_notes').upsert({
                         date_str: dateStr,
                         trainer: this.currentTrainer,
@@ -680,28 +732,28 @@
                 },
 
                 get trainerInitials() { return this.currentTrainer.split(' ').map(n => n[0]).join(''); },
-                get selectedMonthShortName() { return this.monthsConfig[this.selectedMonth]?.name || 'OCT'; },
-                get selectedMonthLabel() { return this.monthsConfig[this.selectedMonth]?.label || 'Octubre 2026'; },
                 get calendarModalTitle() { return this.calendarMode === 'schedule' ? 'Programar Estación' : 'Reprogramar Visita'; },
-                get calendarModalSubtitle() { return 'Selecciona el día en el calendario'; },
-                selectMonth(m) { this.selectedMonth = m; },
 
                 getTrainerStations() { return this.stations.filter(s => s.trainer === this.currentTrainer); },
                 get filteredStations() {
                     if (!this.searchQuery) return this.stations;
                     return this.stations.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || s.id.toString().includes(this.searchQuery));
                 },
-                getTrainerVisits() { return (this.visits[this.selectedMonth] || []).filter(v => v.trainer === this.currentTrainer); },
+                getTrainerVisits() { 
+                    let key = this.currentMonthPrefix;
+                    return (this.visits[key] || []).filter(v => v.trainer === this.currentTrainer); 
+                },
 
                 getMonthCalendarDays() {
-                    let currentCfg = this.monthsConfig[this.selectedMonth] || this.monthsConfig['current'];
+                    let cfg = this.currentMonthConfig;
+                    let prefix = this.currentMonthPrefix;
                     let list = [];
                     let weekdays = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-                    let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
+                    let holidays = [`${this.selectedYear}-11-03`, `${this.selectedYear}-11-04`, `${this.selectedYear}-11-28`, `${this.selectedYear}-12-08`, `${this.selectedYear}-12-25`];
 
-                    for (let i = 1; i <= currentCfg.days; i++) {
+                    for (let i = 1; i <= cfg.days; i++) {
                         let dayNumStr = i < 10 ? '0' + i : '' + i;
-                        let dateStr = `${currentCfg.prefix}-${dayNumStr}`;
+                        let dateStr = `${prefix}-${dayNumStr}`;
                         let d = new Date(dateStr + 'T00:00:00');
                         let dayOfWeek = d.getDay();
                         list.push({
@@ -713,6 +765,36 @@
                         });
                     }
                     return list;
+                },
+
+                getPickerCalendarDays() {
+                    let cfg = this.allMonthsConfig[this.pickerMonthIdx];
+                    let prefix = `${this.selectedYear}-${cfg.monthNum}`;
+                    let list = [];
+                    let weekdays = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+                    let holidays = [`${this.selectedYear}-11-03`, `${this.selectedYear}-11-04`, `${this.selectedYear}-11-28`, `${this.selectedYear}-12-08`, `${this.selectedYear}-12-25`];
+
+                    for (let i = 1; i <= cfg.days; i++) {
+                        let dayNumStr = i < 10 ? '0' + i : '' + i;
+                        let dateStr = `${prefix}-${dayNumStr}`;
+                        let d = new Date(dateStr + 'T00:00:00');
+                        let dayOfWeek = d.getDay();
+                        list.push({
+                            dateStr: dateStr,
+                            dayNum: i,
+                            dayName: weekdays[dayOfWeek],
+                            isWeekend: (dayOfWeek === 0 || dayOfWeek === 6),
+                            isHoliday: holidays.includes(dateStr)
+                        });
+                    }
+                    return list;
+                },
+
+                navigatePickerMonth(step) {
+                    let newIdx = this.pickerMonthIdx + step;
+                    if (newIdx >= 0 && newIdx < 12) {
+                        this.pickerMonthIdx = newIdx;
+                    }
                 },
 
                 getVisitsForDate(dateStr) { return this.getTrainerVisits().filter(v => v.dateStr === dateStr); },
@@ -736,6 +818,7 @@
                     if (!this.isUnlocked) return;
                     this.activeStationToSchedule = st;
                     this.calendarMode = 'schedule';
+                    this.pickerMonthIdx = this.selectedMonthIdx;
                     this.showCalendarModal = true;
                 },
 
@@ -743,6 +826,7 @@
                     if (!this.isUnlocked) return;
                     this.activeVisitToReprogram = visit;
                     this.calendarMode = 'reprogram';
+                    this.pickerMonthIdx = this.selectedMonthIdx;
                     this.showCalendarModal = true;
                 },
 
@@ -779,26 +863,28 @@
                 },
 
                 openAutoGeneratorModal() { if(this.isUnlocked) this.showAutoModal = true; },
-                toggleAutoMonth(mKey) {
-                    let idx = this.selectedAutoMonths.indexOf(mKey);
-                    if (idx > -1) this.selectedAutoMonths.splice(idx, 1);
+                
+                toggleAutoMonthIdx(mIdx) {
+                    let idx = this.selectedAutoMonthsIdx.indexOf(mIdx);
+                    if (idx > -1) this.selectedAutoMonthsIdx.splice(idx, 1);
                     else {
-                        if (this.selectedAutoMonths.length >= 2) { alert("Máximo 2 meses."); return; }
-                        this.selectedAutoMonths.push(mKey);
+                        if (this.selectedAutoMonthsIdx.length >= 2) { alert("Máximo 2 meses a la vez."); return; }
+                        this.selectedAutoMonthsIdx.push(mIdx);
                     }
                 },
 
                 async executeAutomaticSchedule() {
                     if (!this.isUnlocked) return;
                     let trainerStations = this.stations.filter(s => s.trainer === this.currentTrainer);
-                    let holidays = ['2026-11-03', '2026-11-04', '2026-11-28', '2026-12-08', '2026-12-25'];
+                    let holidays = [`${this.selectedYear}-11-03`, `${this.selectedYear}-11-04`, `${this.selectedYear}-11-28`, `${this.selectedYear}-12-08`, `${this.selectedYear}-12-25`];
                     let stationIndex = 0;
                     let rowsToInsert = [];
 
-                    for (let mKey of this.selectedAutoMonths) {
-                        let cfg = this.monthsConfig[mKey];
+                    for (let mIdx of this.selectedAutoMonthsIdx) {
+                        let cfg = this.allMonthsConfig[mIdx];
+                        let prefix = `${this.selectedYear}-${cfg.monthNum}`;
                         for (let i = 1; i <= cfg.days; i++) {
-                            let dateStr = `${cfg.prefix}-${i < 10 ? '0' + i : i}`;
+                            let dateStr = `${prefix}-${i < 10 ? '0' + i : i}`;
                             let d = new Date(dateStr + 'T00:00:00');
                             let dow = d.getDay();
                             if (dow >= 2 && dow <= 5 && !holidays.includes(dateStr)) {
@@ -837,7 +923,7 @@
                     let blob = new Blob([icsLines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
                     let link = document.createElement("a");
                     link.href = window.URL.createObjectURL(blob);
-                    link.download = `Visitas_Puma_${this.selectedMonthShortName}.ics`;
+                    link.download = `Visitas_Puma_${this.selectedMonthShortName}_${this.selectedYear}.ics`;
                     link.click();
                 },
 
